@@ -19,7 +19,7 @@ function Upsample(sz::Tuple, nvar; atype = Knet.atype(), method = :nearest)
     # (2,2,...) for as many spatial/temporal dimension there are
     ksize = ntuple(i -> 2, N)
     allst = ntuple(i -> :, N)
-    @show sz,nvar,ksize,allst, method
+    println("size = $sz; nvar = $nvar, ksize = $ksize, method = $method")
 
     if method == :nearest
         w = atype(zeros(ksize...,nvar,nvar))
@@ -524,7 +524,6 @@ function recmodel4(sz,enc_nfilter,skipconnections,l=1; method = :nearest)
     # size after pooling
     sz_small = sz.÷2 .+ odd
 
-    @show l,skipconnections,l in skipconnections
     if l == length(enc_nfilter)
         return identity
     else
@@ -756,7 +755,7 @@ function reconstruct(Atype,data_all,fnames_rec;
     loss = model(Atype(inputs_), Atype(xtrue))
     @info "Initial loss:      $loss"
 
-    losses = []
+    losses = typeof(loss)[]
 
     for fname_rec in fnames_rec
         if isfile(fname_rec)
@@ -771,15 +770,16 @@ function reconstruct(Atype,data_all,fnames_rec;
 
         lr = learning_rate * 0.5^(e / learning_rate_decay_epoch)
 
+        N = 0
+        loss_sum = 0
         # loop over training datasets
         for (ii,loss) in enumerate(adam(model, DINCAE.PrefetchDataIter(train); gclip = clip_grad, lr = lr))
-        #for (ii,loss) in enumerate(adam(model, train; gclip = clip_grad, lr = lr))
-            push!(losses,loss)
-
-            if (ii-1) % 20 == 0
-                println("epoch: $(@sprintf("%5d",e )) loss $(@sprintf("%5.4f",loss))")
-            end
+            #for (ii,loss) in enumerate(adam(model, train; gclip = clip_grad, lr = lr))
+            loss_sum += loss
+            N += 1
         end
+        push!(losses,loss_sum/N)
+        println("epoch: $(@sprintf("%5d",e )) loss $(@sprintf("%5.4f",losses[end]))")
 
         if e ∈ save_epochs
             println("Save output $e")
