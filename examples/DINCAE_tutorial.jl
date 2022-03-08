@@ -17,8 +17,6 @@
 #
 # Load the necessary modules
 
-delete!(ENV,"DISPLAY")
- 
 using CUDA
 using DINCAE
 using DINCAE_utils
@@ -57,12 +55,10 @@ fname_cv = joinpath(localdir,"modis_cleanup_add_clouds.nc")
 varname = "sst"
 
 # Results of DINCAE will be places in a sub-directory under `localdir`
+
 outdir = joinpath(localdir,"Results")
 mkpath(outdir)
 
-
-
-#=
 # The variable `url` is the OPeNDAP data URL of the MODIS data. Note the final
 # `#fillmismatch` (look here https://github.com/Unidata/netcdf-c/issues/1299#issuecomment-458312804
 # for `#fillmismatch` the suffix)
@@ -169,7 +165,6 @@ data_all = [data,data_test]
 #epochs = 10
 #save_epochs = epochs:epochs
 
-
 # Start the training and reconstruction of the neural network
 
 loss = DINCAE.reconstruct(
@@ -190,7 +185,6 @@ plot(loss)
 ylim(extrema(loss[2:end]))
 xlabel("epochs")
 ylabel("loss");
-=#
 
 ## Post process results
 #
@@ -201,7 +195,6 @@ case = (
     fname_cv = fname_cv,
     varname = varname,
 )
-#fnameavg = fnames_rec[1]
 fnameavg = joinpath(outdir,"data-avg.nc")
 cvrms = DINCAE_utils.cvrms(case,fnameavg)
 @info "Cross-validation RMS error is: $cvrms"
