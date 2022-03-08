@@ -41,17 +41,28 @@ lat_range = [33.8, 38.2]
 # time range (start, end)
 time_range = [DateTime(2000,2,25), DateTime(2020,12,31)]
 #time_range = [DateTime(2000,2,25), DateTime(2000,3,31)]
-time_range = [DateTime(2001,1,1), DateTime(2001,12,31)]
+#time_range = [DateTime(2001,1,1), DateTime(2001,12,31)]
 
 
 # local directory
-localdir = expanduser("~/Data/SST-AlboranSea-example2")
+localdir = expanduser("~/Data/SST-AlboranSea-example")
 # create directory
 mkpath(localdir)
 # filename of the subset
 fname_subset = joinpath(localdir,"modis_subset.nc")
+# filename of the clean data
+fname = joinpath(localdir,"modis_cleanup.nc")
+# filename of the data with added clouds for cross-validation
+fname_cv = joinpath(localdir,"modis_cleanup_add_clouds.nc")
+varname = "sst"
+
+# Results of DINCAE will be places in a sub-directory under `localdir`
+outdir = joinpath(localdir,"Results")
+mkpath(outdir)
 
 
+
+#=
 # The variable `url` is the OPeNDAP data URL of the MODIS data. Note the final
 # `#fillmismatch` (look here https://github.com/Unidata/netcdf-c/issues/1299#issuecomment-458312804
 # for `#fillmismatch` the suffix)
@@ -105,20 +116,16 @@ close(ds2)
 DINCAE_utils.add_mask(fname,varname; minseafrac = 0.05)
 
 # Choose cross-validation points by adding clouds to the cleanest
-# images (copied from the most cloudiest images)
+# images (copied from the most cloudiest images). This function will generate
+# a file `fname_cv`.
 
-fname_cv = DINCAE_utils.addcvpoint(fname,varname; mincvfrac = 0.10);
-
+DINCAE_utils.addcvpoint(fname,varname; mincvfrac = 0.10);
 
 # # Reconstruct missing data
 #
 #
 # F is the floating point number type for neural network, here we use
 # single precision
-
-#fname = joinpath(localdir,"modis_cleanup.nc")
-#fname_cv = joinpath(localdir,"modis_cleanup_add_clouds.nc")
-#varname = "sst"
 
 const F = Float32
 
@@ -146,10 +153,7 @@ upsampling_method = :nearest
 loss_weights_refine = (0.3,0.7)
 save_epochs = 200:10:epochs
 
-# Results will be places in a sub-directory under `localdir`
 
-outdir = joinpath(localdir,"Results")
-mkpath(outdir)
 data = [
    (filename = fname_cv,
     varname = varname,
@@ -186,6 +190,7 @@ plot(loss)
 ylim(extrema(loss[2:end]))
 xlabel("epochs")
 ylabel("loss");
+=#
 
 ## Post process results
 #
@@ -196,7 +201,8 @@ case = (
     fname_cv = fname_cv,
     varname = varname,
 )
-fnameavg = fnames_rec[1]
+#fnameavg = fnames_rec[1]
+fnameavg = joinpath(outdir,"data-avg.nc")
 cvrms = DINCAE_utils.cvrms(case,fnameavg)
 @info "Cross-validation RMS error is: $cvrms"
 
@@ -205,5 +211,6 @@ cvrms = DINCAE_utils.cvrms(case,fnameavg)
 
 figdir = joinpath(outdir,"Fig")
 DINCAE_utils.plotres(case,fnameavg, clim = nothing, figdir = figdir,
+                     clim_quantile = (0.01,0.99),
                      which_plot = :cv)
 @info "Figures are in $(figdir)"
