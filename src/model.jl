@@ -809,5 +809,11 @@ function reconstruct(Atype,data_all,fnames_rec;
         shuffle!(train)
     end
 
+    for fname_rec in fnames_rec
+        NCDataset(fname_rec,"a") do ds
+            defVar(ds,"losses",losses,("epochs",))
+        end
+    end
+
     return losses
 end
