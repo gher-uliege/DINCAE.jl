@@ -207,3 +207,10 @@ DINCAE_utils.plotres(case,fnameavg, clim = nothing, figdir = figdir,
                      clim_quantile = (0.01,0.99),
                      which_plot = :cv)
 @info "Figures are in $(figdir)"
+
+
+# Example reconstruction for the 2001-09-12
+# ![reconstruction for the 2001-09-12](Fig/data-avg_2001-09-12.png)
+# Panel (a) is the original data where we have added clouds (panel (b)). The
+# reconstuction based on the data in panel (b) is shown in panel (c) together
+# with its expected standard deviation error (panel (d)).
