@@ -6,7 +6,7 @@
 # DINCAE.jl
 
 DINCAE (Data-Interpolating Convolutional Auto-Encoder) is a neural network to reconstruct missing data in satellite observations.
-This repo contains the julia port of DINCAE. The original [python code](https://github.com/gher-ulg/DINCAE) is no longer maintained.
+This repository contains the julia port of DINCAE. The original [python code](https://github.com/gher-ulg/DINCAE) is no longer maintained.
 
 Utilities (for plotting and data preparation) are available in a separate repository
 https://github.com/gher-ulg/DINCAE_utils.jl
@@ -70,3 +70,12 @@ The latest version number is available from [here](https://github.com/gher-ulg/D
 
 More information is available in the [documentation](https://gher-ulg.github.io/DINCAE.jl/stable/) and the tutorial (available as
 [script](https://github.com/gher-ulg/DINCAE.jl/blob/main/examples/DINCAE_tutorial.jl) and [jupyter notebook](https://github.com/gher-ulg/DINCAE.jl/blob/main/examples/DINCAE_tutorial.ipynb)).
+
+<!--  LocalWords:  codecov io DINCAE jl Convolutional julia Alvera
+ -->
+<!--  LocalWords:  Azcárate Licer Beckers convolutional Geosci Dev
+ -->
+<!--  LocalWords:  Troupin altimetry preprint xzf utils url Knet CUDA
+ -->
+<!--  LocalWords:  jupyter
+ -->
