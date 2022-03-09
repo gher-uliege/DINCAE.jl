@@ -28,9 +28,6 @@ data = [
    )
 ]
 data_test = data;
-
-fnames_rec = [tempname()]
-
 data_all = [data,data_test]
 
 epochs = 2
@@ -43,31 +40,40 @@ truth_uncertain = false
 enc_nfilter_internal = round.(Int,32 * 2 .^ (0:4))
 clip_grad = 5.0
 regularization_L2_beta = 0
-save_epochs = []
+save_epochs = [epochs]
 is3D = false
 ntime_win = 3
-upsampling_method = :nearest
 
-losses = DINCAE.reconstruct(
-    Atype,data_all,fnames_rec;
-    epochs = epochs,
-    batch_size = batch_size,
-    truth_uncertain = truth_uncertain,
-    enc_nfilter_internal = enc_nfilter_internal,
-    clip_grad = clip_grad,
-    save_epochs = save_epochs,
-    is3D = is3D,
-    upsampling_method = upsampling_method,
-    ntime_win = ntime_win,
-)
+for (upsampling_method,is3D,truth_uncertain) = ((:nearest,false,false),
+                                (:bilinear,false,false),
+                                (:nearest,true,false),
+                                (:nearest,false,true))
+
+    fnames_rec = [tempname()]
+
+    losses = DINCAE.reconstruct(
+        Atype,data_all,fnames_rec;
+        epochs = epochs,
+        batch_size = batch_size,
+        truth_uncertain = truth_uncertain,
+        enc_nfilter_internal = enc_nfilter_internal,
+        clip_grad = clip_grad,
+        save_epochs = save_epochs,
+        is3D = is3D,
+        upsampling_method = upsampling_method,
+        ntime_win = ntime_win,
+    )
 
 
-@test isfile(fnames_rec)
+    @test isfile(fnames_rec[1])
 
-NCDataset(fnames_rec[1]) do ds
-    losses = ds["losses"][:]
-    @test length(losses) == epochs
+    NCDataset(fnames_rec[1]) do ds
+        losses = ds["losses"][:]
+        @test length(losses) == epochs
+    end
+    rm(fnames_rec[1])
 end
+
 
 #=
 if haskey(ENV,"CI")
