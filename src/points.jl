@@ -188,13 +188,11 @@ function PointCloud(
     pos = Vector{Vector{NTuple{N,T}}}(undef,ntime)
 
 
-    @show sum(length.(values))
+    @info "number of provided data points: $(sum(length.(values)))"
 
     posindices!(T,grid,coord,pos,(values,dtime,id))
-    @show sum(length.(values))
-    @show sum(length.(pos))
-    @show sum(length.(id))
-    @show sum(length.(dtime))
+
+    @info "number of data points within domain: $(sum(length.(values)))"
 
     ndata = 1
 
