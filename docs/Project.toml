@@ -1,16 +1,4 @@
-using Documenter, DINCAE
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DINCAE = "0d879ee6-e5ed-4b6f-b65c-f78122b59944"
 
-makedocs(;
-    modules=[DINCAE],
-    format=Documenter.HTML(),
-    pages=[
-        "Home" => "index.md",
-    ],
-    repo="https://github.com/gher-ulg/DINCAE.jl/blob/{commit}{path}#L{line}",
-    sitename="DINCAE.jl",
-    authors="Alexander Barth <barth.alexander@gmail.com>",
-)
-
-deploydocs(;
-    repo="github.com/Alexander-Barth/DINCAE.jl",
-)
