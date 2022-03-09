@@ -810,7 +810,8 @@ function reconstruct(Atype,data_all,fnames_rec;
     end
 
     for fname_rec in fnames_rec
-        NCDataset(fname_rec,"a") do ds
+        mode = (isfile(fname_rec) ? "a" : "c")
+        NCDataset(fname_rec,mode) do ds
             defVar(ds,"losses",losses,("epochs",))
         end
     end
