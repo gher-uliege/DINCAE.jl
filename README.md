@@ -1,3 +1,8 @@
+[![Build Status](https://github.com/gher-ulg/DINCAE.jl/workflows/CI/badge.svg)](https://github.com/gher-ulg/DINCAE.jl/actions)
+[![codecov.io](http://codecov.io/github/gher-ulg/DINCAE.jl/coverage.svg?branch=main)](http://codecov.io/github/gher-ulg/DINCAE.jl?branch=main)
+[![documentation stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gher-ulg.github.io/DINCAE.jl/stable/)
+[![documentation latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://gher-ulg.github.io/DINCAE.jl/latest/)
+
 # DINCAE.jl
 
 DINCAE (Data-Interpolating Convolutional Auto-Encoder) is a neural network to reconstruct missing data in satellite observations.
@@ -42,7 +47,7 @@ using DINCAE
 ```
 
 
-# Updating DINCAE
+### Updating DINCAE
 
 To update `DINCAE`, run the following command and restart Julia (or restart the jupyter notebook kernel using `Kernel` -> `Restart`):
 
@@ -60,3 +65,8 @@ Pkg.status()
 ```
 
 The latest version number is available from [here](https://github.com/gher-ulg/DINCAE.jl/releases).
+
+## Documentation
+
+More information is available in the [documentation](https://gher-ulg.github.io/DINCAE.jl/stable/) and the tutorial (available as
+[script](https://github.com/gher-ulg/DINCAE.jl/blob/main/examples/DINCAE_tutorial.jl) and [jupyter notebook](https://github.com/gher-ulg/DINCAE.jl/blob/main/examples/DINCAE_tutorial.ipynb)).
