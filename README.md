@@ -19,16 +19,16 @@ The method is described in the following articles:
 ## Installation
 
 You need [Julia](https://julialang.org/downloads) (version 1.7 or later) to run `DINCAE`. The command line interface is sufficient for `DINCAE`.
-If you are using Linux, installing and running julia 1.7.2 julia as easy as running these shell commands
+If you are using Linux, installing and running Julia 1.7.2 is as easy as running these shell commands:
 
 ```bash
 curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz | tar -xzf -
 julia-1.7.2/bin/julia
 ```
 
-This installs julia in the current directory under the folder `julia-1.7.2`.
+This installs Julia in the current directory under the folder `julia-1.7.2`.
 For more information and other platforms, please see [platform specific instructions](https://julialang.org/downloads/platform/) for further installation instructions.
-You can check the latest available version of julia at https://julialang.org/downloads but avoid beta releases and release candidates if you are new to julia.
+You can check the latest available version of Julia at https://julialang.org/downloads but avoid beta releases and release candidates if you are new to Julia.
 
 Inside a Julia terminal, you can download and install `DINCAE` and `DINCAE_utils` by issuing these commands:
 
