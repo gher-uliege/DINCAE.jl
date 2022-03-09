@@ -62,6 +62,7 @@ mkpath(outdir)
 # The variable `url` is the OPeNDAP data URL of the MODIS data. Note the final
 # `#fillmismatch` (look here https://github.com/Unidata/netcdf-c/issues/1299#issuecomment-458312804
 # for `#fillmismatch` the suffix)
+# The downloading can take several minutes.
 
 url = "https://thredds.jpl.nasa.gov/thredds/dodsC/ncml_aggregation/OceanTemperature/modis/terra/11um/4km/aggregate__MODIS_TERRA_L3_SST_THERMAL_DAILY_4KM_DAYTIME_V2019.0.ncml#fillmismatch"
 ds = NCDataset(url)
