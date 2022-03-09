@@ -1,9 +1,5 @@
-using Dates
 using DINCAE
-using Knet
-using LinearAlgebra
 using NCDatasets
-using Printf
 using Random
 
 T = Float32
@@ -48,6 +44,7 @@ start_skip = 2
 regularization_L1_beta = 0
 regularization_L2_beta = 1e-4
 loss_weights_refine = (1.,)
+enc_nfilter_internal = [25,50,75]
 skipconnections = start_skip:(length(enc_nfilter_internal)+1)
 
 fnames_rec = ["data-avg.nc"]
