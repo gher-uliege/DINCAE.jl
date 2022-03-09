@@ -12,5 +12,5 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/Alexander-Barth/DINCAE.jl",
+    repo="github.com/gher-ulg/DINCAE.jl",
 )
