@@ -16,9 +16,9 @@ ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 
 [compat]
 julia = "1"
-CUDA = "3"
+CUDA = "3.8"
 Knet = "1.4"
-LearnBase = "0.3"
+LearnBase = "0.6"
 NCDatasets = "0.11, 0.12"
 ThreadsX = "0.1"
 
@@ -28,4 +28,4 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
 
 [targets]
-test = ["Test","NCDatasets","Random"]
+test = ["Test", "NCDatasets", "Random"]
