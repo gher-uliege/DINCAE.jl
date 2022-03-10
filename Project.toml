@@ -16,6 +16,11 @@ ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 
 [compat]
 julia = "1"
+CUDA = "3"
+Knet = "1.4"
+LearnBase = "0.3"
+NCDatasets = "0.11, 0.12"
+ThreadsX = "0.1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
