@@ -2,6 +2,9 @@ name = "DINCAE"
 uuid = "0d879ee6-e5ed-4b6f-b65c-f78122b59944"
 authors = ["Alexander Barth <barth.alexander@gmail.com>"]
 version = "0.1.0"
+keywords = ["satellite observations", "oceanography", "missing data", "inpainting", "auto-encoder","neural network"]
+license = "GPL3+"
+desc = "DINCAE (Data-Interpolating Convolutional Auto-Encoder) is a neural network to reconstruct missing data in satellite observations"
 
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
