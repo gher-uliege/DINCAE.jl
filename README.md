@@ -21,12 +21,12 @@ The method is described in the following articles:
 Panel (a) is the original data where we have added clouds (panel (b)). The reconstuction based on the data in panel (b) is shown in panel (c) together
 with its expected standard deviation error (panel (d))
 
-DINCAE is indented to be used with a [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) with [CUDA](https://en.wikipedia.org/wiki/CUDA) support (NVIDIA GPU). The code can also run on a CPU but which will be quite slow.
+DINCAE is indented to be used with a [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) with [CUDA](https://en.wikipedia.org/wiki/CUDA) support (NVIDIA GPU). The code can also run on a [CPU](https://en.wikipedia.org/wiki/Central_processing_unit) but which will be quite slow.
 
 ## Installation
 
-You need [Julia](https://julialang.org/downloads) (version 1.7 or later) to run `DINCAE`. The command line interface is sufficient for `DINCAE`.
-If you are using Linux, installing and running Julia 1.7.2 is as easy as running these shell commands:
+You need [Julia](https://julialang.org/downloads) (version 1.7 or later) to run `DINCAE`. The command line interface of Julia is sufficient for `DINCAE`.
+If you are using Linux (on a x86_64 CPU), installing and running Julia 1.7.2 is as easy as running these shell commands:
 
 ```bash
 curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz | tar -xzf -
