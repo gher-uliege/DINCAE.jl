@@ -21,6 +21,8 @@ The method is described in the following articles:
 Panel (a) is the original data where we have added clouds (panel (b)). The reconstuction based on the data in panel (b) is shown in panel (c) together
 with its expected standard deviation error (panel (d))
 
+DINCAE is indented to be used with a [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) with [CUDA](https://en.wikipedia.org/wiki/CUDA) support (NVIDIA GPU). The code can also run on a CPU but which will be quite slow.
+
 ## Installation
 
 You need [Julia](https://julialang.org/downloads) (version 1.7 or later) to run `DINCAE`. The command line interface is sufficient for `DINCAE`.
@@ -43,7 +45,7 @@ Pkg.add(url="https://github.com/gher-ulg/DINCAE.jl", rev="main")
 Pkg.add(url="https://github.com/gher-ulg/DINCAE_utils.jl", rev="main")
 ```
 
-`DINCAE.jl` depends on `Knet.jl` and `CUDA.jl` which will automatically installed. More information is available at [https://denizyuret.github.io/Knet.jl/latest/install/](https://denizyuret.github.io/Knet.jl/latest/install/) and [https://cuda.juliagpu.org/stable/](https://cuda.juliagpu.org/stable/).
+`DINCAE.jl` depends on `Knet.jl` and `CUDA.jl` which will automatically be installed. More information is available at [https://denizyuret.github.io/Knet.jl/latest/install/](https://denizyuret.github.io/Knet.jl/latest/install/) and [https://cuda.juliagpu.org/stable/](https://cuda.juliagpu.org/stable/).
 
 After this, you should be able to load `DINCAE` with:
 
