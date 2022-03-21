@@ -43,7 +43,7 @@ Pkg.add(url="https://github.com/gher-ulg/DINCAE.jl", rev="main")
 Pkg.add(url="https://github.com/gher-ulg/DINCAE_utils.jl", rev="main")
 ```
 
-`DINCAE.jl` depends on `Knet.jl` and `CUDA.jl` which will automatically installed. More information is available at [https://denizyuret.github.io/Knet.jl/latest/install/](https://denizyuret.github.io/Knet.jl/latest/install/) and [https://cuda.juliagpu.org/stable/](https://cuda.juliagpu.org/stable/).
+`DINCAE.jl` depends on `Knet.jl` and `CUDA.jl` which will automatically be installed. More information is available at [https://denizyuret.github.io/Knet.jl/latest/install/](https://denizyuret.github.io/Knet.jl/latest/install/) and [https://cuda.juliagpu.org/stable/](https://cuda.juliagpu.org/stable/).
 
 After this, you should be able to load `DINCAE` with:
 
