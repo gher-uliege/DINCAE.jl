@@ -417,7 +417,6 @@ function getxy!(dd::NCData{T,4},ind::Integer,xin::AbstractArray{T2,4},xtrue::Abs
     return (xin,xtrue)
 end
 
-import LearnBase: nobs, getobs, getobs!
 nobs(dd::NCData) = length(dd.time)
 function getobs(dd::NCData{T},index::Int) where T
     data = (zeros(T,sizex(dd)),zeros(T,sizey(dd)))
