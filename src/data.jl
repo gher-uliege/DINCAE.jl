@@ -129,8 +129,8 @@ mutable struct NCData{T,N}
     jitter_std::Vector{T}
     lon_scaled::Vector{T}
     lat_scaled::Vector{T}
-    dayofyear_cos::Vector{T}
-    dayofyear_sin::Vector{T}
+    time_cos::Matrix{T}
+    time_sin::Matrix{T}
     ntime_win::Int
 end
 
@@ -161,7 +161,7 @@ end
     ndata = sz[3]
     ntime_win = dd.ntime_win
 
-    nvar = 4 + ndata*2
+    nvar = 2 + 2*size(dd.time_cos,1) + ndata*2
     #nvar = 6+2*2
     return (sz[1],sz[2],ntime_win,nvar)
 end
@@ -198,6 +198,8 @@ function NCData(lon,lat,time,data_full,missingmask;
                 ntime_win = 3,
                 is3D = false,
                 isoutput = (1:size(data_full,3) .== 1),
+                cycle_periods = (365.25,), # days
+                time_origin = DateTime(1970,1,1),
                 )
 
     meandata = sum(x -> (isnan(x) ? zero(x) : x),data_full,dims = 4) ./ sum(.!isnan,data_full,dims = 4)
@@ -206,10 +208,18 @@ function NCData(lon,lat,time,data_full,missingmask;
     ndata = size(data_full,3)
     ntime = size(data_full,4)
 
-    year_length = 365.25 # days
-    dayofyear = Dates.dayofyear.(time)
-    dayofyear_cos = Float32.(cos.(2π * dayofyear/year_length))
-    dayofyear_sin = Float32.(sin.(2π * dayofyear/year_length))
+    time_cos = zeros(Float32,length(cycle_periods),length(time))
+    time_sin = zeros(Float32,length(cycle_periods),length(time))
+
+    @inbounds for n = 1:length(time)
+        # time in days
+        t = Dates.value(time[n] - time_origin) / (1000*60*60)
+
+        for k = 1:length(cycle_periods)
+            time_cos[k,n] = cos(2π * t/cycle_periods[k])
+            time_sin[k,n] = sin(2π * t/cycle_periods[k])
+        end
+    end
 
     data = data_full .- meandata
     sz = size(data)
@@ -238,8 +248,8 @@ function NCData(lon,lat,time,data_full,missingmask;
            Float32.(jitter_std),
            lon_scaled,
            lat_scaled,
-           dayofyear_cos,
-           dayofyear_sin,
+           time_cos,
+           time_sin,
            ntime_win
            )
 end
@@ -274,6 +284,8 @@ function getxy!(dd::NCData{T,3},ind::Integer,xin,xtrue) where T
     centraln = (ntime_win+1) ÷ 2
 
     ntime_win_half = (ntime_win-1) ÷ 2
+    ncycles = size(dd.time_cos,1)
+
     nrange = max.(1, min.(ntime, (-ntime_win_half:ntime_win_half) .+ ind))
 
     # metadata
@@ -281,8 +293,11 @@ function getxy!(dd::NCData{T,3},ind::Integer,xin,xtrue) where T
         for i = 1:sz[1]
             xin[i,j,1]  = dd.lon_scaled[i]
             xin[i,j,2]  = dd.lat_scaled[j]
-            xin[i,j,3]  = dd.dayofyear_cos[ind]
-            xin[i,j,4]  = dd.dayofyear_sin[ind]
+
+            for k = 1:ncycles
+                xin[i,j,2+k]  = dd.time_cos[k,ind]
+                xin[i,j,3+k]  = dd.time_sin[k,ind]
+            end
         end
     end
 
@@ -293,8 +308,8 @@ function getxy!(dd::NCData{T,3},ind::Integer,xin,xtrue) where T
 
             for j = 1:sz[2]
                 for i = 1:sz[1]
-                    offset = 5 + 2*(localn-1) + (idata-1)*2*ntime_win
-                    xin[i,j,offset] = dd.x[i,j,idata,n,1]
+                    offset = 3 + 2*ncycles + 2*(localn-1) + (idata-1)*2*ntime_win
+                    xin[i,j,offset    ] = dd.x[i,j,idata,n,1]
                     xin[i,j,offset + 1] = dd.x[i,j,idata,n,2]
                 end
             end
@@ -305,18 +320,19 @@ function getxy!(dd::NCData{T,3},ind::Integer,xin,xtrue) where T
     if dd.train
         imask = rand(1:size(dd.missingmask,3))
         yield()
+        offset_c = 3 + 2*ncycles + 2*(centraln-1)
 
         @inbounds for j = 1:sz[2]
             for i = 1:sz[1]
                 if dd.missingmask[i,j,imask]
-                    xin[i,j,5 + 2*(centraln-1)] = 0
-                    xin[i,j,6 + 2*(centraln-1)] = 0
+                    xin[i,j,offset_c  ] = 0
+                    xin[i,j,offset_c+1] = 0
                 end
 
                 # add jitter
                 for idata = 1:ndata
                     for (localn,n) in enumerate(nrange)
-                        offset = 5 + 2*(localn-1) + (idata-1)*2*ntime_win
+                        offset = 3 + 2*ncycles + 2*(localn-1) + (idata-1)*2*ntime_win
 
                         xin[i,j,offset] += (dd.jitter_std[idata] * randn(T))
                     end
@@ -353,6 +369,7 @@ function getxy!(dd::NCData{T,4},ind::Integer,xin::AbstractArray{T2,4},xtrue::Abs
     ntime_win = dd.ntime_win
     #@show size(xin,3), 4 + ndata*2*ntime_win
     ntime_win_half = (ntime_win-1) ÷ 2
+    ncycles = size(dd.time_cos,1)
 
     nrange = max.(1, min.(ntime, (-ntime_win_half:ntime_win_half) .+ ind))
 
@@ -363,8 +380,11 @@ function getxy!(dd::NCData{T,4},ind::Integer,xin::AbstractArray{T2,4},xtrue::Abs
             for i = 1:sz[1]
                 xin[i,j,localn,1]  = dd.lon_scaled[i]
                 xin[i,j,localn,2]  = dd.lat_scaled[j]
-                xin[i,j,localn,3]  = dd.dayofyear_cos[n]
-                xin[i,j,localn,4]  = dd.dayofyear_sin[n]
+
+                for k = 1:ncycles
+                    xin[i,j,localn,2+k]  = dd.time_cos[k,n]
+                    xin[i,j,localn,3+k]  = dd.time_sin[k,n]
+                end
             end
         end
     end
@@ -375,8 +395,9 @@ function getxy!(dd::NCData{T,4},ind::Integer,xin::AbstractArray{T2,4},xtrue::Abs
         for (localn,n) in enumerate(nrange)
             for j = 1:sz[2]
                 for i = 1:sz[1]
-                    xin[i,j,localn,5 + (idata-1)*2]  = dd.x[i,j,idata,n,1]
-                    xin[i,j,localn,6 + (idata-1)*2]  = dd.x[i,j,idata,n,2]
+                    offset = 3 + 2*ncycles + (idata-1)*2
+                    xin[i,j,localn,offset  ]  = dd.x[i,j,idata,n,1]
+                    xin[i,j,localn,offset+1]  = dd.x[i,j,idata,n,2]
                 end
             end
         end
@@ -384,6 +405,7 @@ function getxy!(dd::NCData{T,4},ind::Integer,xin::AbstractArray{T2,4},xtrue::Abs
 
     # add missing data during training randomly
     if dd.train
+        offset = 3 + 2*ncycles
         for (localn,n) in enumerate(nrange)
             yield()
             imask = rand(1:size(dd.missingmask,3))
@@ -391,13 +413,13 @@ function getxy!(dd::NCData{T,4},ind::Integer,xin::AbstractArray{T2,4},xtrue::Abs
             @inbounds for j = 1:sz[2]
                 for i = 1:sz[1]
                     if dd.missingmask[i,j,imask]
-                        xin[i,j,localn,5] = 0
-                        xin[i,j,localn,6] = 0
+                        xin[i,j,localn,offset  ] = 0
+                        xin[i,j,localn,offset+1] = 0
                     end
 
                     # add jitter
                     for idata = 1:ndata
-                        xin[i,j,localn,5 + (idata-1)*2] += dd.jitter_std[idata] * randn(T)
+                        xin[i,j,localn,offset + (idata-1)*2] += dd.jitter_std[idata] * randn(T)
                     end
                 end
             end
