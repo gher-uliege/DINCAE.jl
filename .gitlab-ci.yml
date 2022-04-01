@@ -4,6 +4,6 @@ before_script:
   # workaround for https://github.com/JuliaDocs/Documenter.jl/issues/686
   - julia --project=@. -e "import Pkg; Pkg.build()"
 
-  default:
+default:
   script:
     - julia --project=@. -e "import Pkg; Pkg.test(; coverage = true)"
