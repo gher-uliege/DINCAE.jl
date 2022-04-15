@@ -1,0 +1,9 @@
+image: julia:1.7                # image comes from Docker hub
+
+before_script:
+  # workaround for https://github.com/JuliaDocs/Documenter.jl/issues/686
+  - julia --project=@. -e "import Pkg; Pkg.build()"
+
+default:
+  script:
+    - julia --project=@. -e "import Pkg; Pkg.test(; coverage = true)"
