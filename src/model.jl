@@ -729,9 +729,11 @@ function reconstruct(Atype,data_all,fnames_rec;
 
     @info "Number of filters: $enc_nfilter"
     if loss_weights_refine == (1.,)
-        model = Model(DINCAE.recmodel3(
+        model = Model(DINCAE.recmodel4(
             sz[1:end-2],
-            enc_nfilter,method = upsampling_method),truth_uncertain,gamma)
+            enc_nfilter,
+            skipconnections,
+            method = upsampling_method),truth_uncertain,gamma)
     else
         println("Step model")
 
