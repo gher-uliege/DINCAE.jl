@@ -571,13 +571,14 @@ function reconstruct_points(
     @info "number of variaiables: $nvar"
     gamma = log(min_std_err^(-2))
     @info "gamma: $gamma"
+    noutput = 1
 
     enc_nfilter = vcat([nvar],enc_nfilter_internal)
+    dec_nfilter = vcat([2*noutput],enc_nfilter_internal)
 
     if loss_weights_refine == (1.,)
         println("no refine")
-        noutput = 1
-        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,skipconnections; method = upsampling_method) ,)
+        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method) ,)
         model = DINCAE.StepModel(steps,noutput,loss_weights_refine,truth_uncertain,gamma,
                                  regularization_L1_beta,regularization_L2_beta)
 
@@ -585,12 +586,11 @@ function reconstruct_points(
         #model = DINCAE.Model(DINCAE.recmodel_noskip(sz[1:2],enc_nfilter; method = upsampling_method),truth_uncertain)
     else
         enc_nfilter2 = copy(enc_nfilter)
-        enc_nfilter2[1] += 2
-        @show enc_nfilter,enc_nfilter2
-        @show loss_weights_refine
+        enc_nfilter2[1] += 2*noutput
+        dec_nfilter2 = copy(enc_nfilter2)
 
-        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,skipconnections; method = upsampling_method),
-                 DINCAE.recmodel4(sz[1:2],enc_nfilter2,skipconnections; method = upsampling_method))
+        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
+                 DINCAE.recmodel4(sz[1:2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
 
         #model1 = DINCAE.Model(chain1,truth_uncertain)
         #model2

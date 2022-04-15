@@ -220,8 +220,7 @@ function (model::Model)(x_)
     allst = ntuple(i -> :, N-2)
 
     x = model.chain(x_)
-
-    noutput = 2
+    noutput = size(x)[end-1] ÷ 2
 
     return reduce(
         pcat,
@@ -501,7 +500,7 @@ function recmodel3(sz,enc_nfilter,l=1; method = :nearest)
     end
 end
 
-function recmodel4(sz,enc_nfilter,skipconnections,l=1; method = :nearest)
+function recmodel4(sz,enc_nfilter,dec_nfilter,skipconnections,l=1; method = :nearest)
     # for 2D
     # convkernel = (3,3)
     # upkernel = (2,2)
@@ -529,10 +528,10 @@ function recmodel4(sz,enc_nfilter,skipconnections,l=1; method = :nearest)
     else
         inner = Chain((Conv(convkernel,enc_nfilter[l],enc_nfilter[l+1]),
                        mypool,
-                       recmodel4(sz_small,enc_nfilter,skipconnections,l+1, method = method),
+                       recmodel4(sz_small,enc_nfilter,dec_nfilter,skipconnections,l+1, method = method),
                        Upsample(sz_small, enc_nfilter[l+1], method = method),
                        x -> croppadding(x,odd),
-                       Conv(convkernel,enc_nfilter[l+1],enc_nfilter[l],f)))
+                       Conv(convkernel,dec_nfilter[l+1],dec_nfilter[l],f)))
 
         if l in skipconnections
             println("skip connections at level $l")
@@ -717,7 +716,10 @@ function reconstruct(Atype,data_all,fnames_rec;
     # number of output variables
     noutput = sum(train_data.isoutput)
 
-    @info "Number of filters: $enc_nfilter"
+    dec_nfilter = vcat([2*noutput],enc_nfilter_internal)
+
+    @info "Number of filters in encoder: $enc_nfilter"
+    @info "Number of filters in decoder: $dec_nfilter"
     inputs_,xtrue = first(train)
     sz = size(inputs_)
 
@@ -732,6 +734,7 @@ function reconstruct(Atype,data_all,fnames_rec;
         model = Model(DINCAE.recmodel4(
             sz[1:end-2],
             enc_nfilter,
+            dec_nfilter,
             skipconnections,
             method = upsampling_method),truth_uncertain,gamma)
     else
@@ -739,10 +742,12 @@ function reconstruct(Atype,data_all,fnames_rec;
 
         enc_nfilter2 = copy(enc_nfilter)
         enc_nfilter2[1] += 2*noutput
-        @info "Number of filters (refinement): $enc_nfilter2"
+        dec_nfilter2 = copy(dec_nfilter)
+        @info "Number of filters in encoder (refinement): $enc_nfilter2"
+        @info "Number of filters in decoder (refinement): $dec_nfilter2"
 
-        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,skipconnections; method = upsampling_method),
-                 DINCAE.recmodel4(sz[1:2],enc_nfilter2,skipconnections; method = upsampling_method))
+        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
+                 DINCAE.recmodel4(sz[1:2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
 
         model = StepModel(steps,noutput,loss_weights_refine,truth_uncertain,gamma)
     end
