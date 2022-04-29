@@ -674,15 +674,16 @@ function reconstruct(Atype,data_all,fnames_rec;
                      learning_rate_decay_epoch = Inf,
                      min_std_err = 0.006737946999085467,
                      loss_weights_refine = (1.,),
+                     cycle_periods = (365.25,), # days
 )
     DB(Atype,d,batch_size) = (Atype.(tmp) for tmp in DataLoader(d,batch_size))
 
     varname = data_all[1][1].varname
 
     if !is3D
-        nvar = 4 + 2*ntime_win*length(data_all[1])
+        nvar = 2 + 2*length(cycle_periods) + 2*ntime_win*length(data_all[1])
     else
-        nvar = 4 + 2*length(data_all[1])
+        nvar = 2 + 2*length(cycle_periods) + 2*length(data_all[1])
     end
 
     enc_nfilter = vcat([nvar],enc_nfilter_internal)
@@ -694,6 +695,7 @@ function reconstruct(Atype,data_all,fnames_rec;
         d,train = i == 1,
         ntime_win = ntime_win,
         is3D = is3D,
+        cycle_periods = cycle_periods,
     ) for (i,d) in enumerate(data_all)]
 
     # use common mean
