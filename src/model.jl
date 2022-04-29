@@ -820,6 +820,23 @@ function reconstruct(Atype,data_all,fnames_rec;
         mode = (isfile(fname_rec) ? "a" : "c")
         NCDataset(fname_rec,mode) do ds
             defVar(ds,"losses",losses,("epochs",))
+
+            ds.attrib["epochs"] = epochs
+            ds.attrib["batch_size"] = batch_size
+            ds.attrib["truth_uncertain"] = Int(truth_uncertain)
+            ds.attrib["enc_nfilter_internal"] = collect(enc_nfilter_internal)
+            ds.attrib["skipconnections"] = collect(skipconnections)
+            ds.attrib["clip_grad"] = clip_grad
+            ds.attrib["regularization_L2_beta"] = regularization_L2_beta
+            ds.attrib["save_epochs"] = collect(save_epochs)
+            ds.attrib["is3D"] = Int(is3D)
+            ds.attrib["upsampling_method"] = string(upsampling_method)
+            ds.attrib["ntime_win"] = ntime_win
+            ds.attrib["learning_rate"] = learning_rate
+            ds.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
+            ds.attrib["min_std_err"] = min_std_err
+            ds.attrib["loss_weights_refine"] = collect(loss_weights_refine)
+            ds.attrib["cycle_periods"] = collect(cycle_periods)
         end
     end
 
