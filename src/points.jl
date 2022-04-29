@@ -621,7 +621,7 @@ function reconstruct_points(
     end
 
     meandata = zeros(sz[1:2]);
-    ds = ncsetup(fname_rec,varname,grid[1],grid[2],meandata)
+    ds = ncsetup(fname_rec,[varname],(grid[1],grid[2]),meandata)
 
     @time for e = 1:epochs
         #@time @profile for e = 1:epochs
@@ -643,16 +643,16 @@ function reconstruct_points(
 
             if savesnapshot
                 fname_rec_snapshot = replace(fname_rec,".nc" => "-epoch$(@sprintf("%05d",e )).nc")
-                ds_snapshot = ncsetup(fname_rec_snapshot,varname,grid[1],grid[2],meandata)
+                ds_snapshot = ncsetup(fname_rec_snapshot,[varname],(grid[1],grid[2]),meandata)
             end
 
             @time for (ii,(inputs_,xtrue)) in enumerate(data_iter[2])
                 xrec = Array(model(inputs_))
                 offset = (ii-1)*batch_size
-                ncsavesample(ds,varname,xrec,meandata,ii-1,offset)
+                savesample(ds,[varname],xrec,meandata,ii-1,offset)
 
                 if savesnapshot
-                    ncsavesample(ds_snapshot,varname,xrec,meandata,ii-1,offset)
+                    savesample(ds_snapshot,[varname],xrec,meandata,ii-1,offset)
                 end
             end
 

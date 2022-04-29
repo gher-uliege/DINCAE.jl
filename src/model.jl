@@ -246,6 +246,10 @@ function costfun_single(xrec,xtrue,truth_uncertain)
 #    @show extrema(Array(m_true))
 
     n_noncloud = sum(mask_noncloud)
+    # if n_noncloud == 0
+    #     @show n_noncloud
+    #     error("no data")
+    # end
     #@show n_noncloud
     if truth_uncertain
         # KL divergence between two univariate Gaussians p and q
@@ -772,6 +776,9 @@ function reconstruct(Atype,data_all,fnames_rec;
         end
     end
 
+    ds = [ncsetup(fname_rec,output_varnames,(train_data.lon,train_data.lat),
+                  train_data.meandata[:,:,findall(train_data.isoutput)])
+          for fname_rec in fnames_rec]
 
     # loop over epochs
     @time for e = 1:epochs
@@ -787,13 +794,18 @@ function reconstruct(Atype,data_all,fnames_rec;
             loss_sum += loss
             N += 1
         end
+
+        #for (ii,loss) in enumerate(train)
+        #    loss_sum += sum(sum.(loss))
+        #    N += 1
+        #end
         push!(losses,loss_sum/N)
         println("epoch: $(@sprintf("%5d",e )) loss $(@sprintf("%5.4f",losses[end]))")
 
         if e ∈ save_epochs
             println("Save output $e")
 
-            for (d_iter,fname_rec) in zip(data_iter[2:end],fnames_rec)
+            for (d_iter,ds_) in zip(data_iter[2:end],ds)
                 @time for (ii,(inputs_,xtrue)) in enumerate(d_iter)
                     xrec = Array(model(inputs_))
 
@@ -805,11 +817,9 @@ function reconstruct(Atype,data_all,fnames_rec;
                     offset = (ii-1)*batch_size
 
                     DINCAE.savesample(
-                        fname_rec,
+                        ds_,
                         output_varnames,xrec,
                         train_data.meandata[:,:,findall(train_data.isoutput)],
-                        train_data.lon,
-                        train_data.lat,
                         ii-1,offset)
                 end
             end
@@ -818,28 +828,27 @@ function reconstruct(Atype,data_all,fnames_rec;
         shuffle!(train)
     end
 
-    for fname_rec in fnames_rec
-        mode = (isfile(fname_rec) ? "a" : "c")
-        NCDataset(fname_rec,mode) do ds
-            defVar(ds,"losses",losses,("epochs",))
+    for ds_ in ds
+        defVar(ds_,"losses",losses,("epochs",))
 
-            ds.attrib["epochs"] = epochs
-            ds.attrib["batch_size"] = batch_size
-            ds.attrib["truth_uncertain"] = Int(truth_uncertain)
-            ds.attrib["enc_nfilter_internal"] = collect(enc_nfilter_internal)
-            ds.attrib["skipconnections"] = collect(skipconnections)
-            ds.attrib["clip_grad"] = clip_grad
-            ds.attrib["regularization_L2_beta"] = regularization_L2_beta
-            ds.attrib["save_epochs"] = collect(save_epochs)
-            ds.attrib["is3D"] = Int(is3D)
-            ds.attrib["upsampling_method"] = string(upsampling_method)
-            ds.attrib["ntime_win"] = ntime_win
-            ds.attrib["learning_rate"] = learning_rate
-            ds.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
-            ds.attrib["min_std_err"] = min_std_err
-            ds.attrib["loss_weights_refine"] = collect(loss_weights_refine)
-            ds.attrib["cycle_periods"] = collect(cycle_periods)
-        end
+        ds_.attrib["epochs"] = epochs
+        ds_.attrib["batch_size"] = batch_size
+        ds_.attrib["truth_uncertain"] = Int(truth_uncertain)
+        ds_.attrib["enc_nfilter_internal"] = collect(enc_nfilter_internal)
+        ds_.attrib["skipconnections"] = collect(skipconnections)
+        ds_.attrib["clip_grad"] = clip_grad
+        ds_.attrib["regularization_L2_beta"] = regularization_L2_beta
+        ds_.attrib["save_epochs"] = collect(save_epochs)
+        ds_.attrib["is3D"] = Int(is3D)
+        ds_.attrib["upsampling_method"] = string(upsampling_method)
+        ds_.attrib["ntime_win"] = ntime_win
+        ds_.attrib["learning_rate"] = learning_rate
+        ds_.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
+        ds_.attrib["min_std_err"] = min_std_err
+        ds_.attrib["loss_weights_refine"] = collect(loss_weights_refine)
+        ds_.attrib["cycle_periods"] = collect(cycle_periods)
+
+        close(ds_)
     end
 
     return losses

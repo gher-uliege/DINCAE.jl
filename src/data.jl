@@ -450,49 +450,8 @@ function getobs!(dd::NCData,data,index::Int) where T
     return data
 end
 
-function savesample(fname,varnames,xrec,meandata,lon,lat,ii,offset)
+function savesample(ds,varnames,xrec,meandata,ii,offset)
     fill_value = -9999.
-
-    if !isfile(fname)
-        # create file
-        #ds = Dataset(fname, "c", format = :netcdf4_classic)
-        ds = Dataset(fname, "c", format = :netcdf3_64bit_offset)
-
-        # dimensions
-        defDim(ds,"time", Inf)
-        defDim(ds,"lon", length(lon))
-        defDim(ds,"lat", length(lat))
-
-        # variables
-        nc_lon = defVar(ds,"lon", Float32, ("lon",))
-        nc_lat = defVar(ds,"lat", Float32, ("lat",))
-
-        for (i,varname) in enumerate(varnames)
-            nc_meandata = defVar(
-                ds,
-                varname * "_mean", Float32, ("lon","lat"),
-                fillvalue=fill_value)
-
-            nc_batch_m_rec = defVar(
-                ds,
-                varname, Float32, ("lon","lat","time"),
-                fillvalue=fill_value)
-
-            nc_batch_sigma_rec = defVar(
-                ds,
-                varname * "_error", Float32, ("lon","lat","time"),
-                fillvalue=fill_value)
-
-            nc_meandata[:,:] = replace(meandata[:,:,i], NaN => missing)
-        end
-        # data
-        nc_lon[:] = lon
-        nc_lat[:] = lat
-        ds.attrib["count"] = 0
-    else
-        # append to file
-        ds = Dataset(fname, "a")
-    end
 
     if offset == 0
         ds.attrib["count"] = ds.attrib["count"] + 1
@@ -539,13 +498,11 @@ function savesample(fname,varnames,xrec,meandata,lon,lat,ii,offset)
                          batch_sigma_rec[:,:,n]) / count, NaN => fill_value)
         end
     end
-
-    close(ds)
 end
 
 
 
-function ncsetup(fname,varname,lon,lat,meandata)
+function ncsetup(fname,varnames,(lon,lat),meandata)
     fill_value = -9999.
 
     if isfile(fname)
@@ -565,72 +522,31 @@ function ncsetup(fname,varname,lon,lat,meandata)
     # variables
     nc_lon = defVar(ds,"lon", Float32, ("lon",))
     nc_lat = defVar(ds,"lat", Float32, ("lat",))
-    nc_meandata = defVar(
-        ds,
-        varname * "_mean", Float32, ("lon","lat"),
-        fillvalue=fill_value)
 
-    nc_batch_m_rec = defVar(
-        ds,
-        varname, Float32, ("lon","lat","time"),
-        fillvalue=fill_value)
 
-    nc_batch_sigma_rec = defVar(
-        ds,
-        varname * "_error", Float32, ("lon","lat","time"),
-        fillvalue=fill_value)
+    for (i,varname) in enumerate(varnames)
+        nc_meandata = defVar(
+            ds,
+            varname * "_mean", Float32, ("lon","lat"),
+            fillvalue=fill_value)
 
+        nc_batch_m_rec = defVar(
+            ds,
+            varname, Float32, ("lon","lat","time"),
+            fillvalue=fill_value)
+
+        nc_batch_sigma_rec = defVar(
+            ds,
+            varname * "_error", Float32, ("lon","lat","time"),
+            fillvalue=fill_value)
+        nc_meandata[:,:] = replace(meandata[:,:,i], NaN => missing)
+    end
     # data
     nc_lon[:] = lon
     nc_lat[:] = lat
-    nc_meandata[:,:] = replace(meandata, NaN => missing);
     ds.attrib["count"] = 0
-
     return ds
 end
-
-function ncsavesample(ds,varname,xrec,meandata,ii,offset)
-    fill_value = -9999.
-    batch_m_rec = xrec[:,:,1,:]
-    batch_σ2_rec = xrec[:,:,2,:]
-
-    recdata = batch_m_rec .+ meandata
-    batch_sigma_rec = sqrt.(batch_σ2_rec)
-
-    batch_sigma_rec[isnan.(recdata)] .= NaN
-
-    nc_batch_m_rec = ds[varname]
-    nc_batch_sigma_rec = ds[varname * "_error"]
-
-    if offset == 0
-        ds.attrib["count"] = ds.attrib["count"] + 1
-    end
-    count = Int(ds.attrib["count"])
-
-    if count == 1
-        sz = (size(batch_m_rec,1),size(batch_m_rec,2))
-        for n in 1:size(batch_m_rec,3)
-            nc_batch_m_rec.var[:,:,n+offset] = zeros(Float32,sz)
-            nc_batch_sigma_rec.var[:,:,n+offset] = zeros(Float32,sz)
-        end
-    end
-
-    for n in 1:size(batch_m_rec,3)
-        # add mask
-        #nc_batch_m_rec[:,:,n+offset] = replace(recdata[:,:,n], NaN => missing)
-        #nc_batch_sigma_rec[:,:,n+offset] = replace(batch_sigma_rec[:,:,n], NaN => missing)
-
-        nc_batch_m_rec.var[:,:,n+offset] =
-            replace(((count-1) * nc_batch_m_rec.var[:,:,n+offset] +
-                     recdata[:,:,n]) / count, NaN => fill_value)
-
-        nc_batch_sigma_rec.var[:,:,n+offset] =
-            replace(((count-1) * nc_batch_sigma_rec.var[:,:,n+offset] +
-                     batch_sigma_rec[:,:,n]) / count, NaN => fill_value)
-    end
-end
-
-
 
 struct DataBatches{Atype,T,N,Tdata,Tbatch}
     data::Tdata
