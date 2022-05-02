@@ -141,7 +141,6 @@ end
 
 epochs = 1000
 batch_size = 32
-skipconnections = [1,2,3,4]
 enc_nfilter_internal = round.(Int,32 * 2 .^ (0:4))
 clip_grad = 5.0
 regularization_L2_beta = 0
