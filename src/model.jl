@@ -834,19 +834,19 @@ function reconstruct(Atype,data_all,fnames_rec;
         ds_.attrib["epochs"] = epochs
         ds_.attrib["batch_size"] = batch_size
         ds_.attrib["truth_uncertain"] = Int(truth_uncertain)
-        ds_.attrib["enc_nfilter_internal"] = collect(enc_nfilter_internal)
-        ds_.attrib["skipconnections"] = collect(skipconnections)
+        ds_.attrib["enc_nfilter_internal"] = Vector{Int}(enc_nfilter_internal)
+        ds_.attrib["skipconnections"] = Vector{Int}(skipconnections)
         ds_.attrib["clip_grad"] = clip_grad
         ds_.attrib["regularization_L2_beta"] = regularization_L2_beta
-        ds_.attrib["save_epochs"] = collect(save_epochs)
+        ds_.attrib["save_epochs"] = Vector{Int}(save_epochs)
         ds_.attrib["is3D"] = Int(is3D)
         ds_.attrib["upsampling_method"] = string(upsampling_method)
         ds_.attrib["ntime_win"] = ntime_win
         ds_.attrib["learning_rate"] = learning_rate
         ds_.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
         ds_.attrib["min_std_err"] = min_std_err
-        ds_.attrib["loss_weights_refine"] = collect(loss_weights_refine)
-        ds_.attrib["cycle_periods"] = collect(cycle_periods)
+        ds_.attrib["loss_weights_refine"] = Vector{Int}(loss_weights_refine)
+        ds_.attrib["cycle_periods"] = Vector{Float64}(cycle_periods)
 
         close(ds_)
     end
