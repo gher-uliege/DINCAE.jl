@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - cycles
+      - dev
     tags: '*'
 jobs:
   test:
