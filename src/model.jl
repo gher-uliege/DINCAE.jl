@@ -228,23 +228,7 @@ function (model::Model)(x_)
 
 end
 
-function costfun_single(xrec,xtrue,truth_uncertain)
-    N = ndims(xtrue)
-    allst = ntuple(i -> :, N-2)
-
-    m_rec = xrec[allst...,1:1,:]
-    σ2_rec = xrec[allst...,2:2,:]
-
-    σ2_true = sinv(xtrue[allst...,2:2,:])
-    m_true = xtrue[allst...,1:1,:] .* σ2_true
-
-    # # 1 if measurement
-    # # 0 if no measurement (cloud or land for SST)
-    mask_noncloud = xtrue[allst...,2:2,:] .!= 0
-
-#    @show extrema(Array(m_rec))
-#    @show extrema(Array(m_true))
-
+function costfun_single(m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,truth_uncertain)
     n_noncloud = sum(mask_noncloud)
     # if n_noncloud == 0
     #     @show n_noncloud
@@ -278,8 +262,29 @@ function costfun_single(xrec,xtrue,truth_uncertain)
         cost = (sum(log.(σ2_rec_noncloud)) + sum(difference2 ./ σ2_rec)) / n_noncloud
     end
 
-    difference2 = (m_rec - m_true).^2  .* mask_noncloud
-    costMSE = sum(difference2) / n_noncloud
+    return cost
+end
+function costfun_single(xrec,xtrue,truth_uncertain)
+    N = ndims(xtrue)
+    allst = ntuple(i -> :, N-2)
+
+    m_rec = xrec[allst...,1:1,:]
+    σ2_rec = xrec[allst...,2:2,:]
+
+    σ2_true = sinv(xtrue[allst...,2:2,:])
+    m_true = xtrue[allst...,1:1,:] .* σ2_true
+
+    # # 1 if measurement
+    # # 0 if no measurement (cloud or land for SST)
+    mask_noncloud = xtrue[allst...,2:2,:] .!= 0
+
+#    @show extrema(Array(m_rec))
+#    @show extrema(Array(m_true))
+
+    cost = costfun_single(m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,truth_uncertain)
+
+    #difference2 = (m_rec - m_true).^2  .* mask_noncloud
+    #costMSE = sum(difference2) / n_noncloud
 
     #return costMSE
     #    cost = sum(σ2_rec .* mask_noncloud)
