@@ -6,12 +6,6 @@ function sinv(x, ; minx = eltype(x)(1e-3))
     return one(T) ./ max.(x,minx)
 end
 
-# upsampling
-struct Upsample{TA,N}
-    w::TA
-    padding::NTuple{N,Int}
-end
-
 function Upsample(sz::Tuple, nvar; atype = Knet.atype(), method = :nearest)
     N = length(sz)
     #nvar = sz[N+1]
@@ -71,22 +65,12 @@ end
 
 export upsample
 
-struct CatSkip
-    inner
-end
-export CatSkip
-
 function (m::CatSkip)(x)
 #    @show size(x),size(m.inner(x))
     return cat(m.inner(x), x, dims=Val(3))
 end
 #(m::CatSkip)(x) = x
 
-
-struct SumSkip
-    inner
-end
-export SumSkip
 
 function (m::SumSkip)(x)
     return m.inner(x) + x
@@ -684,6 +668,8 @@ function reconstruct(Atype,data_all,fnames_rec;
                      min_std_err = 0.006737946999085467,
                      loss_weights_refine = (1.,),
                      cycle_periods = (365.25,), # days
+                     output_ndims = 1,
+                     direction_obs = nothing,
 )
     DB(Atype,d,batch_size) = (Atype.(tmp) for tmp in DataLoader(d,batch_size))
 
@@ -720,7 +706,12 @@ function reconstruct(Atype,data_all,fnames_rec;
     train_data = data_sources[1]
 
     all_varnames = map(v -> v.varname,data_all[1])
-    output_varnames = all_varnames[train_data.isoutput]
+
+    if output_ndims == 1
+        output_varnames = all_varnames[train_data.isoutput]
+    else
+        output_varnames = ["u","v"]
+    end
 
     @info "Output variables:  $output_varnames"
 
@@ -742,13 +733,25 @@ function reconstruct(Atype,data_all,fnames_rec;
 
     @info "Number of filters: $enc_nfilter"
     if loss_weights_refine == (1.,)
-        model = Model(DINCAE.recmodel4(
-            sz[1:end-2],
-            enc_nfilter,
-            dec_nfilter,
-            skipconnections,
-            method = upsampling_method),truth_uncertain,gamma)
+        if output_ndims == 1
+            model = Model(DINCAE.recmodel4(
+                sz[1:end-2],
+                enc_nfilter,
+                dec_nfilter,
+                skipconnections,
+                method = upsampling_method),truth_uncertain,gamma)
+        else
+            model = ModelVector2_1(
+                DINCAE.recmodel4(
+                    sz[1:end-2],
+                    enc_nfilter,
+                    dec_nfilter,
+                    skipconnections,
+                    method = upsampling_method),
+                truth_uncertain,gamma,direction_obs)
+        end
     else
+        @assert output_ndims == 1
         println("Step model")
 
         enc_nfilter2 = copy(enc_nfilter)
@@ -781,8 +784,11 @@ function reconstruct(Atype,data_all,fnames_rec;
         end
     end
 
-    ds = [ncsetup(fname_rec,output_varnames,(train_data.lon,train_data.lat),
-                  train_data.meandata[:,:,findall(train_data.isoutput)])
+    ds = [ncsetup(
+        fname_rec,output_varnames,(train_data.lon,train_data.lat),
+        train_data.meandata[:,:,findall(train_data.isoutput)],
+        output_ndims = output_ndims,
+    )
           for fname_rec in fnames_rec]
 
     # loop over epochs

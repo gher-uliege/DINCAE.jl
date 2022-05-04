@@ -450,7 +450,7 @@ function getobs!(dd::NCData,data,index::Int) where T
     return data
 end
 
-function savesample(ds,varnames,xrec,meandata,ii,offset)
+function savesample(ds,varnames,xrec,meandata,ii,offset; output_ndims = 1)
     fill_value = -9999.
 
     if offset == 0
@@ -472,37 +472,42 @@ function savesample(ds,varnames,xrec,meandata,ii,offset)
         end
     end
 
-    for (ivar,varname) in enumerate(varnames)
-        nc_batch_m_rec = ds[varname]
-        nc_batch_sigma_rec = ds[varname * "_error"]
+    if output_ndims == 1
+        for (ivar,varname) in enumerate(varnames)
+            nc_batch_m_rec = ds[varname]
+            nc_batch_sigma_rec = ds[varname * "_error"]
 
-        batch_m_rec = xrec[:,:,2*ivar - 1,:]
-        batch_σ2_rec = xrec[:,:,2*ivar,:]
+            batch_m_rec = xrec[:,:,2*ivar - 1,:]
+            batch_σ2_rec = xrec[:,:,2*ivar,:]
 
-        recdata = batch_m_rec .+ meandata[:,:,ivar]
-        batch_sigma_rec = sqrt.(batch_σ2_rec)
+            recdata = batch_m_rec .+ meandata[:,:,ivar]
+            batch_sigma_rec = sqrt.(batch_σ2_rec)
 
-        batch_sigma_rec[isnan.(recdata)] .= NaN
+            batch_sigma_rec[isnan.(recdata)] .= NaN
 
-        for n in 1:size(batch_m_rec,3)
-            # add mask
-            #nc_batch_m_rec[:,:,n+offset] = replace(recdata[:,:,n], NaN => missing)
-            #nc_batch_sigma_rec[:,:,n+offset] = replace(batch_sigma_rec[:,:,n], NaN => missing)
+            for n in 1:size(batch_m_rec,3)
+                # add mask
+                #nc_batch_m_rec[:,:,n+offset] = replace(recdata[:,:,n], NaN => missing)
+                #nc_batch_sigma_rec[:,:,n+offset] = replace(batch_sigma_rec[:,:,n], NaN => missing)
 
-            nc_batch_m_rec.var[:,:,n+offset] =
-                replace(((count-1) * nc_batch_m_rec.var[:,:,n+offset] +
-                         recdata[:,:,n]) / count, NaN => fill_value)
+                nc_batch_m_rec.var[:,:,n+offset] =
+                    replace(((count-1) * nc_batch_m_rec.var[:,:,n+offset] +
+                             recdata[:,:,n]) / count, NaN => fill_value)
 
-            nc_batch_sigma_rec.var[:,:,n+offset] =
-                replace(((count-1) * nc_batch_sigma_rec.var[:,:,n+offset] +
-                         batch_sigma_rec[:,:,n]) / count, NaN => fill_value)
+                nc_batch_sigma_rec.var[:,:,n+offset] =
+                    replace(((count-1) * nc_batch_sigma_rec.var[:,:,n+offset] +
+                             batch_sigma_rec[:,:,n]) / count, NaN => fill_value)
+            end
         end
+    else
+        @info "save vector"
+
     end
 end
 
 
 
-function ncsetup(fname,varnames,(lon,lat),meandata)
+function ncsetup(fname,varnames,(lon,lat),meandata; output_ndims = 1)
     fill_value = -9999.
 
     if isfile(fname)
@@ -541,6 +546,16 @@ function ncsetup(fname,varnames,(lon,lat),meandata)
             fillvalue=fill_value)
         nc_meandata[:,:] = replace(meandata[:,:,i], NaN => missing)
     end
+
+
+    if output_ndims == 2
+        @assert length(varnames) == 2
+        defVar(
+            ds,
+            (varnames[1] * "_" * varnames[2] * "_covar"), Float32, ("lon","lat","time"),
+            fillvalue=fill_value)
+    end
+
     # data
     nc_lon[:] = lon
     nc_lat[:] = lat

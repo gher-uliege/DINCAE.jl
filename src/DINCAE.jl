@@ -43,7 +43,9 @@ import Base: size
 import Base: getindex
 import Random: shuffle!
 
+include("types.jl")
 include("data.jl")
 include("model.jl")
 include("points.jl")
+include("vector2.jl")
 end
