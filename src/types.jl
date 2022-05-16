@@ -24,3 +24,5 @@ struct ModelVector2_1
     gamma
     directionobs
 end
+
+

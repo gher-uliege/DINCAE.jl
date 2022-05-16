@@ -1,4 +1,6 @@
 
+using JLD2
+
 # save inversion
 #function sinv(x::Union{AbstractArray{T},KnetArray{T},AutoGrad.Result{<:AbstractArray{T}}}; minx = T(1e-3)) where T
 function sinv(x, ; minx = eltype(x)(1e-3))
@@ -246,6 +248,8 @@ function costfun_single(m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,truth_uncert
         cost = (sum(log.(σ2_rec_noncloud)) + sum(difference2 ./ σ2_rec)) / n_noncloud
     end
 
+    #return sum((m_rec - m_true).^2  .* mask_noncloud)
+    #TEST
     return cost
 end
 function costfun_single(xrec,xtrue,truth_uncertain)
@@ -670,15 +674,23 @@ function reconstruct(Atype,data_all,fnames_rec;
                      cycle_periods = (365.25,), # days
                      output_ndims = 1,
                      direction_obs = nothing,
+                     remove_mean = true,
 )
     DB(Atype,d,batch_size) = (Atype.(tmp) for tmp in DataLoader(d,batch_size))
 
     varname = data_all[1][1].varname
+    output_ndims == 2
+
+    if output_ndims == 1
+        nscalar_per_obs = 2
+    else
+        nscalar_per_obs = 5
+    end
 
     if !is3D
-        nvar = 2 + 2*length(cycle_periods) + 2*ntime_win*length(data_all[1])
+        nvar = 2 + 2*length(cycle_periods) + nscalar_per_obs*ntime_win*length(data_all[1])
     else
-        nvar = 2 + 2*length(cycle_periods) + 2*length(data_all[1])
+        nvar = 2 + 2*length(cycle_periods) + nscalar_per_obs*length(data_all[1])
     end
 
     enc_nfilter = vcat([nvar],enc_nfilter_internal)
@@ -687,10 +699,14 @@ function reconstruct(Atype,data_all,fnames_rec;
 
     # first element in data_all is for training
     data_sources = [DINCAE.NCData(
-        d,train = i == 1,
+        d,
+        train = i == 1,
+        #train = false,
         ntime_win = ntime_win,
         is3D = is3D,
         cycle_periods = cycle_periods,
+        remove_mean = remove_mean,
+        direction_obs = direction_obs,
     ) for (i,d) in enumerate(data_all)]
 
     # use common mean
@@ -703,26 +719,39 @@ function reconstruct(Atype,data_all,fnames_rec;
     #data_iter = [DB(Atype,ds,batch_size) for ds in data_sources]
 
     train = data_iter[1]
+    # try to overfir a single minibatch
+    #train = [first(data_iter[1])]
     train_data = data_sources[1]
 
     all_varnames = map(v -> v.varname,data_all[1])
 
     if output_ndims == 1
         output_varnames = all_varnames[train_data.isoutput]
+
+        # number of output variables
+        noutput = sum(train_data.isoutput)
+        dec_nfilter = vcat([2*noutput],enc_nfilter_internal)
     else
+        @assert output_ndims == 2
         output_varnames = ["u","v"]
+
+        noutput = output_ndims
+        # 5 (u,v) and lower matrix of P
+        dec_nfilter = vcat([5],enc_nfilter_internal)
     end
 
     @info "Output variables:  $output_varnames"
 
-    # number of output variables
-    noutput = sum(train_data.isoutput)
-
-    dec_nfilter = vcat([2*noutput],enc_nfilter_internal)
-
     @info "Number of filters in encoder: $enc_nfilter"
     @info "Number of filters in decoder: $dec_nfilter"
     inputs_,xtrue = first(train)
+
+    @debug begin
+        @info "save first minibatch"
+        JLD2.save("minibatch1.jld2",Dict("inputs" => Array(inputs_),
+                                         "xtrue" => Array(xtrue)))
+    end
+
     sz = size(inputs_)
 
     @info "Input size:        $(format_size(sz))"
@@ -748,13 +777,14 @@ function reconstruct(Atype,data_all,fnames_rec;
                     dec_nfilter,
                     skipconnections,
                     method = upsampling_method),
-                truth_uncertain,gamma,direction_obs)
+                truth_uncertain,gamma,Atype(direction_obs))
         end
     else
         @assert output_ndims == 1
         println("Step model")
 
         enc_nfilter2 = copy(enc_nfilter)
+        # update for vector fields
         enc_nfilter2[1] += 2*noutput
         dec_nfilter2 = copy(dec_nfilter)
         @info "Number of filters in encoder (refinement): $enc_nfilter2"
@@ -765,8 +795,6 @@ function reconstruct(Atype,data_all,fnames_rec;
 
         model = StepModel(steps,noutput,loss_weights_refine,truth_uncertain,gamma)
     end
-
-    # TODO reduce output size to 2*noutput
 
     xrec = model(Atype(inputs_))
     @info "Output size:       $(format_size(size(xrec)))"
@@ -800,8 +828,8 @@ function reconstruct(Atype,data_all,fnames_rec;
         N = 0
         loss_sum = 0
         # loop over training datasets
-        for (ii,loss) in enumerate(adam(model, DINCAE.PrefetchDataIter(train); gclip = clip_grad, lr = lr))
-            #for (ii,loss) in enumerate(adam(model, train; gclip = clip_grad, lr = lr))
+        #for (ii,loss) in enumerate(adam(model, DINCAE.PrefetchDataIter(train); gclip = clip_grad, lr = lr))
+            for (ii,loss) in enumerate(adam(model, train; gclip = clip_grad, lr = lr))
             loss_sum += loss
             N += 1
         end
@@ -831,7 +859,9 @@ function reconstruct(Atype,data_all,fnames_rec;
                         ds_,
                         output_varnames,xrec,
                         train_data.meandata[:,:,findall(train_data.isoutput)],
-                        ii-1,offset)
+                        ii-1,offset,
+                        output_ndims = output_ndims,
+                    )
                 end
             end
         end

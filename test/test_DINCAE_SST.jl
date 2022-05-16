@@ -73,3 +73,44 @@ for (upsampling_method,is3D,truth_uncertain) = ((:nearest,false,false),
     rm(fnames_rec[1])
 end
 
+
+
+
+data = [
+   (filename = filename,
+    varname = "SST",
+    obs_err_std = 1,
+    jitter_std = 0.05,
+    isoutput = true,
+   )
+]
+
+ntime_win = 3
+cycle_periods = (365.25,) # days
+is3D = false
+remove_mean = true
+
+data_source = DINCAE.NCData(
+    data,train = true,
+    ntime_win = ntime_win,
+    is3D = is3D,
+    cycle_periods = cycle_periods,
+    remove_mean = remove_mean,
+)
+
+batch_size = 32
+sz = size(data_source.data_full)[1:2]
+
+xin = zeros(sz[1],sz[2],10)
+xtrue = zeros(sz[1],sz[2],2)
+
+# 312 µs
+#@btime DINCAE.getxy!(data_source,1,xin,xtrue);
+
+Atype = Array
+data_iter = DINCAE.DataBatches(Atype,data_source,batch_size)
+
+size(first(data_iter)[2])
+
+# mirlo: 3.645 ms
+#@btime first($data_iter);

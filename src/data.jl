@@ -69,15 +69,15 @@ function load_gridded_nc(data::AbstractVector{NamedTuple{(:filename, :varname, :
     return load_gridded_nc([(d...,isoutput = i==1) for (i,d) in enumerate(data)])
 end
 
-function load_gridded_nc(data::AbstractVector{NamedTuple{(:filename, :varname, :obs_err_std, :jitter_std, :isoutput),T}}) where {T}
+function load_gridded_nc(data::AbstractVector{NamedTuple{(:filename, :varname, :obs_err_std, :jitter_std, :isoutput, :ndims),T}}) where {T}
     lon,lat,datatime,data_full1,missingmask,mask = load_gridded_nc(data[1].filename,data[1].varname);
     sz = size(data_full1)
     data_full = zeros(Float32,sz[1],sz[2],length(data),sz[4]);
     data_full[:,:,1,:] = data_full1;
 
     for i in 2:length(data)
-         lon_,lat_,datatime_,data_full[:,:,i,:],missingmask_,mask_ = load_gridded_nc(
-           data[i].filename,data[i].varname);
+        lon_,lat_,datatime_,data_full[:,:,i,:],missingmask_,mask_ = load_gridded_nc(
+            data[i].filename,data[i].varname);
     end
 
     return lon,lat,datatime,data_full,missingmask,mask
@@ -98,11 +98,10 @@ function load_aux_data(T,sz,auxdata_files)
 
     for i = 1:length(auxdata_files)
         NCDataset(auxdata_files[i].filename) do ds
+            data = nomissing(ds[auxdata_files[i].varname][:,:,:])
+            data_std_err = nomissing(ds[auxdata_files[i].errvarname][:,:,:])
 
-            data = nomissing(Array(ds[auxdata_files[i].varname]))
-            data_std_err = nomissing(Array(ds[auxdata_files[i].errvarname]))
-
-            @show "remove time mean from $(auxdata_files[i].filename)"
+            @info("remove time mean from $(auxdata_files[i].filename)")
             data = data .- mapslices(mean,data,dims=[1,2])
 
             auxdata[:,:,2*i-1,:] = normalize2(data ./ (data_std_err.^2))
@@ -115,7 +114,7 @@ end
 
 
 #mutable struct NCData{T,N} <: AbstractVector{Tuple{Array{T,N},Array{T,N}}}
-mutable struct NCData{T,N}
+mutable struct NCData{T,N #=,TA=#}
     lon::Vector{T}
     lat::Vector{T}
     time::Vector{DateTime}
@@ -132,11 +131,26 @@ mutable struct NCData{T,N}
     time_cos::Matrix{T}
     time_sin::Matrix{T}
     ntime_win::Int
+    direction_obs::Array{T,3}
+    output_ndims::Int
+    ndims::Vector{Int}
+#    auxdata::TA
 end
 
 
 Base.length(dd::NCData) = length(dd.time)
 size_(dd::NCData) = (length(dd.time),);
+
+
+function nscalar_per_obs_(ndims)
+    #  ndims = 1 -> nscalar_per_obs = 1 + 1
+    #  ndims = 2 -> nscalar_per_obs = 2 + 2+1
+    #  ndims = 3 -> nscalar_per_obs = 3 + 3+2+1
+
+    # mean + lower part of covariance matrix
+    return ndims + ndims * (ndims+1) ÷ 2
+end
+
 
 @inline function sizex(dd::NCData{T,3}) where T
     # number of parameters
@@ -144,11 +158,19 @@ size_(dd::NCData) = (length(dd.time),);
     ndata = sz[3]
     ntime_win = dd.ntime_win
 
-    nvar = 4 + ndata*2*ntime_win
+    # if dd.output_ndims == 1
+    #     nvar = 4 + ndata*2*ntime_win
+    # else
+    #     nvar = 4 + ndata*5*ntime_win
+    # end
+
+    nvar = 4 + sum(nscalar_per_obs_.(dd.ndims)) * ntime_win
     #nvar = 6+2*2
     return (sz[1],sz[2],nvar)
 end
 
+
+### size of xtrue
 @inline function sizey(dd::NCData{T,3}) where T
     sz = size(dd.data_full)
     nout = 2*sum(dd.isoutput)
@@ -178,7 +200,7 @@ export sizey
 
 
 """
-    dd = NCData(lon,lat,time,data_full,missingmask;
+    dd = NCData(lon,lat,time,data_full,missingmask,ndims;
                 train = false,
                 obs_err_std = 1.,
                 jitter_std = 0.05)
@@ -191,7 +213,7 @@ latitude in degrees North, `time` is a numpy datetime vector, `data_full` is a
 missing. `jitter_std` is the standard deviation of the noise to be added to the
 data during training.
 """
-function NCData(lon,lat,time,data_full,missingmask;
+function NCData(lon,lat,time,data_full,missingmask,ndims;
                 train = false,
                 obs_err_std = fill(1.,size(data_full,3)),
                 jitter_std = fill(0.05,size(data_full,3)),
@@ -200,9 +222,17 @@ function NCData(lon,lat,time,data_full,missingmask;
                 isoutput = (1:size(data_full,3) .== 1),
                 cycle_periods = (365.25,), # days
                 time_origin = DateTime(1970,1,1),
+                remove_mean = true,
+                direction_obs = nothing,
+#                auxdata = (),
                 )
 
-    meandata = sum(x -> (isnan(x) ? zero(x) : x),data_full,dims = 4) ./ sum(.!isnan,data_full,dims = 4)
+    meandata =
+        if remove_mean
+            sum(x -> (isnan(x) ? zero(x) : x),data_full,dims = 4) ./ sum(.!isnan,data_full,dims = 4)
+        else
+            zeros(size(data_full)[1:end-1]...,1)
+        end
 
     # number of parameters
     ndata = size(data_full,3)
@@ -224,17 +254,40 @@ function NCData(lon,lat,time,data_full,missingmask;
     data = data_full .- meandata
     sz = size(data)
 
-    # dimensions of x: lon, lat, parameter, time, 2
-    x = zeros(Float32,(sz[1],sz[2],sz[3],sz[4],2))
-
-    x[:,:,:,:,1] = replace(data,NaN => 0)
-    x[:,:,:,:,2] = (1 .- isnan.(data))
-
-    for i = 1:ndata
-        # inv. error variance
-        x[:,:,i,:,1] ./= obs_err_std[i]^2
-        x[:,:,i,:,2] ./= obs_err_std[i]^2
+    if direction_obs == nothing
+        direction_obs_ = zeros(Float32,sz[1],sz[2],ndata)
+    else
+        @show size(direction_obs)
+        direction_obs_ = direction_obs
     end
+
+    output_ndims = 2
+
+    #if output_ndims == 1
+        # dimensions of x: lon, lat, parameter, time, 2
+        x = zeros(Float32,(sz[1],sz[2],sz[3],sz[4],2))
+
+        x[:,:,:,:,1] = replace(data,NaN => 0)
+        x[:,:,:,:,2] = (1 .- isnan.(data))
+
+        for i = 1:ndata
+            # inv. error variance
+            x[:,:,i,:,1] ./= obs_err_std[i]^2
+            x[:,:,i,:,2] ./= obs_err_std[i]^2
+        end
+    # else
+    #     # dimensions of x: lon, lat, parameter, time, 5
+    #     x = zeros(Float32,(sz[1],sz[2],sz[3],sz[4],5))
+
+    #     for i = 1:ndata
+    #         # inv. error variance
+    #         x[:,:,i,:,1] = sind(direction_obs[:,:,i]) .* replace(data[:,:,i,:],NaN => 0)
+    #         x[:,:,i,:,2] = cosd(direction_obs[:,:,i]) .* replace(data[:,:,i,:],NaN => 0)
+    #         x[:,:,i,:,3] .= sind(direction_obs[:,:,i]).^2
+    #         x[:,:,i,:,4] .= sind(direction_obs[:,:,i]) .* cosd(direction_obs[:,:,i])
+    #         x[:,:,i,:,5] .= cosd(direction_obs[:,:,i]).^2
+    #     end
+    # end
     # scale between -1 and 1
     lon_scaled = Float32.(2 * (lon .- minimum(lon)) / (maximum(lon) - minimum(lon)) .- 1)
     lat_scaled = Float32.(2 * (lat .- minimum(lat)) / (maximum(lat) - minimum(lat)) .- 1)
@@ -250,8 +303,12 @@ function NCData(lon,lat,time,data_full,missingmask;
            lat_scaled,
            time_cos,
            time_sin,
-           ntime_win
-           )
+           ntime_win,
+#           auxdata,
+           direction_obs_,
+                      output_ndims,
+                      ndims,
+                      )
 end
 
 
@@ -263,8 +320,9 @@ function NCData(data; kwargs...)
     default_jitter_std = 0.05
 
     jitter_std = [getp(d,:jitter_std,default_jitter_std) for d in data]
+    ndims = [getp(d,:ndims,1) for d in data]
 
-    return DINCAE.NCData(lon,lat,datatime,data_full,missingmask;
+    return DINCAE.NCData(lon,lat,datatime,data_full,missingmask,ndims;
                          obs_err_std = [d.obs_err_std for d in data],
                          jitter_std = jitter_std,
                          isoutput = [d.isoutput for d in data],
@@ -287,6 +345,7 @@ function getxy!(dd::NCData{T,3},ind::Integer,xin,xtrue) where T
     ncycles = size(dd.time_cos,1)
 
     nrange = max.(1, min.(ntime, (-ntime_win_half:ntime_win_half) .+ ind))
+    output_ndims = 2
 
     # metadata
     @inbounds for j = 1:sz[2]
@@ -301,48 +360,87 @@ function getxy!(dd::NCData{T,3},ind::Integer,xin,xtrue) where T
         end
     end
 
-    # data (current day)
+    ioffset = 3 + 2*ncycles
+    offset = ioffset
+
+#    for aux in dd.auxdata
+#        ioffset += 1
+#        xin[:,:,ioffset] .= aux
+#    end
+
+    #=
+
+    xin[i,j,1:4] = metadata "lon/lat/time (cos+sin)"
+    xin[i,j,5:end] order:
+      param 1 at time instance 1 (mean/err_var and 1/err_var)
+      param 1 at time instance 2 (mean/err_var and 1/err_var)
+      param 1 at time instance 3 (mean/err_var and 1/err_var)
+      [...]
+      param 1 at time instance ntime_win (mean/err_var and 1/err_var)
+      param 2 at time instance 1 (mean/err_var and 1/err_var)
+      param 2 at time instance 2 (mean/err_var and 1/err_var)
+      param 2 at time instance 3 (mean/err_var and 1/err_var)
+      [...]
+      param 2 at time instance ntime_win (mean/err_var and 1/err_var)
+      [...]
+      param ndata at time instance ntime_win (mean/err_var and 1/err_var)
+    =#
+
     @inbounds for idata = 1:ndata
         for (localn,n) in enumerate(nrange)
-        yield()
-
+            yield()
             for j = 1:sz[2]
                 for i = 1:sz[1]
-                    offset = 3 + 2*ncycles + 2*(localn-1) + (idata-1)*2*ntime_win
-                    xin[i,j,offset    ] = dd.x[i,j,idata,n,1]
-                    xin[i,j,offset + 1] = dd.x[i,j,idata,n,2]
+                    if dd.ndims[idata] == 1
+                        xin[i,j,offset  ] = dd.x[i,j,idata,n,1]
+                        xin[i,j,offset+1] = dd.x[i,j,idata,n,2]
+                    else
+                        xin[i,j,offset  ] = sind(dd.direction_obs[i,j,idata]) .* dd.x[i,j,idata,n,1]
+                        xin[i,j,offset+1] = cosd(dd.direction_obs[i,j,idata]) .* dd.x[i,j,idata,n,1]
+                        xin[i,j,offset+2] = sind(dd.direction_obs[i,j,idata]).^2
+                        xin[i,j,offset+3] = sind(dd.direction_obs[i,j,idata]) .* cosd(dd.direction_obs[i,j,idata])
+                        xin[i,j,offset+4] = cosd(dd.direction_obs[i,j,idata]).^2
+                    end
                 end
             end
+            offset += nscalar_per_obs_(dd.ndims[idata])
         end
     end
 
-    # add missing data during training randomly
+    nscalar_per_obs = nscalar_per_obs_(output_ndims)
+
+    # add missing data during training randomly to param 1 at the central
+    # time step
     if dd.train
         imask = rand(1:size(dd.missingmask,3))
         yield()
-        offset_c = 3 + 2*ncycles + 2*(centraln-1)
-
-        @inbounds for j = 1:sz[2]
-            for i = 1:sz[1]
-                if dd.missingmask[i,j,imask]
-                    xin[i,j,offset_c  ] = 0
-                    xin[i,j,offset_c+1] = 0
-                end
-
-                # add jitter
-                for idata = 1:ndata
-                    for (localn,n) in enumerate(nrange)
-                        offset = 3 + 2*ncycles + 2*(localn-1) + (idata-1)*2*ntime_win
-
-                        xin[i,j,offset] += (dd.jitter_std[idata] * randn(T))
+        offset = ioffset
+        @inbounds for idata = 1:ndata
+            for (localn,n) in enumerate(nrange)
+                if localn == centraln
+                    for k = 0:(nscalar_per_obs-1)
+                        for j = 1:sz[2]
+                            for i = 1:sz[1]
+                                if dd.missingmask[i,j,imask]
+                                    xin[i,j,offset+k] = 0
+                                end
+                            end
+                        end
                     end
-
-                    #xin[i,j,5 + (idata-1)*2*ntime_win] += dd.jitter_std[idata] * randn(T)
-                    #xin[i,j,7 + (idata-1)*2*ntime_win] += dd.jitter_std[idata] * randn(T)
-                    #xin[i,j,9 + (idata-1)*2*ntime_win] += dd.jitter_std[idata] * randn(T)
                 end
+
+                for k = 0:(dd.ndims[idata]-1)
+                    for j = 1:sz[2]
+                        for i = 1:sz[1]
+                            # add jitter to mean
+                            xin[i,j,offset+k] += (dd.jitter_std[idata] * randn(T))
+                        end
+                    end
+                end
+                offset += nscalar_per_obs_(dd.ndims[idata])
             end
-         end
+        end
+
     end
 
     offset = 1
@@ -453,6 +551,12 @@ end
 function savesample(ds,varnames,xrec,meandata,ii,offset; output_ndims = 1)
     fill_value = -9999.
 
+    function accumulate!(var,index,slice,count)
+        # add mask
+        var[:,:,index] =
+            replace(((count-1) * var[:,:,index] + slice) / count, NaN => fill_value)
+    end
+
     if offset == 0
         ds.attrib["count"] = ds.attrib["count"] + 1
     end
@@ -461,16 +565,28 @@ function savesample(ds,varnames,xrec,meandata,ii,offset; output_ndims = 1)
     if count == 1
         sz = (size(xrec,1),size(xrec,2))
 
-        for varname in varnames
-            nc_batch_m_rec = ds[varname]
-            nc_batch_sigma_rec = ds[varname * "_error"]
+        for ivar2 = 1:length(varnames)
+            nc_batch_m_rec = ds[varnames[ivar2]]
+            nc_batch_sigma_rec = ds[varnames[ivar2] * "_error"]
 
             for n in 1:size(xrec,4)
                 nc_batch_m_rec.var[:,:,n+offset] = zeros(Float32,sz)
                 nc_batch_sigma_rec.var[:,:,n+offset] = zeros(Float32,sz)
             end
+
+            if output_ndims == 2
+                # error covariance
+                for ivar1 = (ivar2+1):length(varnames)
+                    nc_batch_covar = ds[(varnames[ivar2] * "_" * varnames[ivar1] * "_covar")]
+                    for n in 1:size(xrec,4)
+                        nc_batch_covar.var[:,:,n+offset] = zeros(Float32,sz)
+                    end
+                end
+            end
         end
     end
+
+    nmax = size(xrec,4)
 
     if output_ndims == 1
         for (ivar,varname) in enumerate(varnames)
@@ -485,23 +601,42 @@ function savesample(ds,varnames,xrec,meandata,ii,offset; output_ndims = 1)
 
             batch_sigma_rec[isnan.(recdata)] .= NaN
 
-            for n in 1:size(batch_m_rec,3)
-                # add mask
-                #nc_batch_m_rec[:,:,n+offset] = replace(recdata[:,:,n], NaN => missing)
-                #nc_batch_sigma_rec[:,:,n+offset] = replace(batch_sigma_rec[:,:,n], NaN => missing)
-
-                nc_batch_m_rec.var[:,:,n+offset] =
-                    replace(((count-1) * nc_batch_m_rec.var[:,:,n+offset] +
-                             recdata[:,:,n]) / count, NaN => fill_value)
-
-                nc_batch_sigma_rec.var[:,:,n+offset] =
-                    replace(((count-1) * nc_batch_sigma_rec.var[:,:,n+offset] +
-                             batch_sigma_rec[:,:,n]) / count, NaN => fill_value)
+            for n in 1:nmax
+                accumulate!(nc_batch_m_rec.var,n+offset,recdata[:,:,n],count)
+                accumulate!(nc_batch_sigma_rec.var,n+offset,batch_sigma_rec[:,:,n],count)
             end
         end
     else
-        @info "save vector"
+        # assume
+        @assert all(meandata .== 0)
+        @assert output_ndims == 2
+        @assert length(varnames) == 2
 
+        P11,P12,P22 = vector2_covariance(xrec)
+        Pcov = reshape([P11,P12,P12,P22],2,2)
+
+        #uv = (xrec[:,:,1,:] .* Pcov[1,1],xrec[:,:,2,:] .* Pcov[2,2])
+        uv = vector2_mean(xrec,(P11,P12,P22))
+
+        for ivar2 = 1:length(varnames)
+            nc_batch_m_rec = ds[varnames[ivar2]]
+            nc_batch_sigma_rec = ds[varnames[ivar2] * "_error"]
+            for n in 1:nmax
+                # accumulate mean
+                accumulate!(nc_batch_m_rec.var,n+offset,uv[ivar2][:,:,n],count)
+
+                # error variance
+                accumulate!(nc_batch_sigma_rec.var,n+offset,sqrt.(Pcov[ivar2,ivar2][:,:,n]),count)
+            end
+
+            # error covariance
+            for ivar1 = (ivar2+1):length(varnames)
+                nc_batch_covar = ds[(varnames[ivar2] * "_" * varnames[ivar1] * "_covar")]
+                for n in 1:nmax
+                    accumulate!(nc_batch_covar.var,n+offset,Pcov[ivar1,ivar2][:,:,n],count)
+                end
+            end
+        end
     end
 end
 
@@ -530,11 +665,6 @@ function ncsetup(fname,varnames,(lon,lat),meandata; output_ndims = 1)
 
 
     for (i,varname) in enumerate(varnames)
-        nc_meandata = defVar(
-            ds,
-            varname * "_mean", Float32, ("lon","lat"),
-            fillvalue=fill_value)
-
         nc_batch_m_rec = defVar(
             ds,
             varname, Float32, ("lon","lat","time"),
@@ -544,12 +674,20 @@ function ncsetup(fname,varnames,(lon,lat),meandata; output_ndims = 1)
             ds,
             varname * "_error", Float32, ("lon","lat","time"),
             fillvalue=fill_value)
-        nc_meandata[:,:] = replace(meandata[:,:,i], NaN => missing)
-    end
 
+        if output_ndims == 1
+            nc_meandata = defVar(
+                ds,
+                varname * "_mean", Float32, ("lon","lat"),
+                fillvalue=fill_value)
+
+            nc_meandata[:,:] = replace(meandata[:,:,i], NaN => missing)
+        end
+    end
 
     if output_ndims == 2
         @assert length(varnames) == 2
+
         defVar(
             ds,
             (varnames[1] * "_" * varnames[2] * "_covar"), Float32, ("lon","lat","time"),
