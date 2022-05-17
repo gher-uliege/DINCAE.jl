@@ -1,5 +1,5 @@
 
-using JLD2
+#using JLD2
 
 # save inversion
 #function sinv(x::Union{AbstractArray{T},KnetArray{T},AutoGrad.Result{<:AbstractArray{T}}}; minx = T(1e-3)) where T
@@ -748,8 +748,8 @@ function reconstruct(Atype,data_all,fnames_rec;
 
     @debug begin
         @info "save first minibatch"
-        JLD2.save("minibatch1.jld2",Dict("inputs" => Array(inputs_),
-                                         "xtrue" => Array(xtrue)))
+        #JLD2.save("minibatch1.jld2",Dict("inputs" => Array(inputs_),
+        #                                 "xtrue" => Array(xtrue)))
     end
 
     sz = size(inputs_)
