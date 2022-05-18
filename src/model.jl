@@ -159,14 +159,6 @@ ConvBN(w::NTuple{3},cx,cy,f = relu) = ConvBN(param(w[1],w[2],w[3],cx,cy), param0
 
 weights(m::Union{Dense,BatchNorm,Conv,ConvBN}) = [m.w]
 
-# Model
-struct Model
-    chain
-    truth_uncertain
-    gamma
-end
-export Model
-
 """
 transform x[:,:,1,:] and x[:,:,2,:] to mean and error variance
 """
@@ -195,23 +187,6 @@ function transform_mσ2(x,gamma)
     return reduce(
         pcat,
         (transform_mσ2_single(x[allst...,(1:2).+2*ivar,:],gamma) for ivar = 0:noutput-1))
-end
-
-weights(model::Model) = weights(model.chain)
-
-function (model::Model)(x_)
-    N = ndims(x_)
-    pcat(x,y) = cat(x,y,dims = Val(N-1))
-
-    allst = ntuple(i -> :, N-2)
-
-    x = model.chain(x_)
-    noutput = size(x)[end-1] ÷ 2
-
-    return reduce(
-        pcat,
-        (transform_mσ2(x[allst...,(1:2).+2*ivar,:],model.gamma) for ivar = 0:noutput-1))
-
 end
 
 function costfun_single(m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,truth_uncertain)
@@ -298,11 +273,6 @@ function costfun(xrec,xtrue,truth_uncertain)
             for ivar in 0:noutput-1 ])
 end
 
-function (model::Model)(inputs_,xtrue)
-    xrec = model(inputs_)
-    return costfun(xrec,xtrue,model.truth_uncertain)
-end
-
 # Model
 struct StepModel{F1,F2}
     chains
@@ -368,22 +338,6 @@ end
     end
     return loss
 end
-
-
-# Model
-struct ModelChainLoss{TC,TL}
-    chain::TC
-    costfun::TL
-end
-
-function (model::ModelChainLoss)(xin)
-    return model.chain(xin)
-end
-
-function (model::ModelChainLoss)(xin,xtrue)
-    return model.costfun(model(xin),xtrue)
-end
-
 
 
 # mode=0: 0 for max, 1 for average including padded values, 2 for average excluding padded values.
@@ -758,7 +712,7 @@ function reconstruct(Atype,data_all,fnames_rec;
                 method = upsampling_method)
 
         if output_ndims == 1
-            model = Model(chain,truth_uncertain,gamma)
+            model = StepModel((chain,),loss_weights_refine,truth_uncertain,gamma)
         else
             model = ModelVector2_1(
                 chain,

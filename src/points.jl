@@ -378,11 +378,6 @@ function DINCAE.sizex(d::PointCloud)
     return (sz[1],sz[2],nvar)
 end
 
-
-
-#function (model::DINCAE.Model)(xin,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}}) where TA <: Union{Array{T,N},KnetArray{T,N}} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
-
-#    xrec = model(xin)
 function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth_uncertain) where TA <: Union{Array{T,N},KnetArray{T,N}} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
 
     #@show typeof(xin)
