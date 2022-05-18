@@ -5,6 +5,7 @@
 using Test
 using DINCAE
 using Knet
+using CUDA
 
 sz = (100,120)
 batch_size = 3
@@ -24,8 +25,11 @@ cost = @time DINCAE.vector2_costfun(xrec,xtrue,truth_uncertain,directionobs)
 
 @test cost isa Number
 
-# test on GPU
-for TA = [KnetArray, CuArray]
-    cost_TA = DINCAE.vector2_costfun(TA(xrec),TA(xtrue),truth_uncertain,TA(directionobs))
-    @test cost ≈ cost_TA
+
+if CUDA.functional()
+    # test on GPU
+    for TA = [KnetArray, CuArray]
+        cost_TA = DINCAE.vector2_costfun(TA(xrec),TA(xtrue),truth_uncertain,TA(directionobs))
+        @test cost ≈ cost_TA
+    end
 end
