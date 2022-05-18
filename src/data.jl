@@ -407,16 +407,16 @@ function getxy!(dd::NCData{T,3},ind::Integer,xin,xtrue) where T
         end
     end
 
-    nscalar_per_obs = nscalar_per_obs_(output_ndims)
-
     # add missing data during training randomly to param 1 at the central
     # time step
     if dd.train
         imask = rand(1:size(dd.missingmask,3))
         yield()
         offset = ioffset
-        @inbounds for idata = 1:ndata
-            for (localn,n) in enumerate(nrange)
+        @inbounds for idata = 1:ndata # parameters
+            nscalar_per_obs = nscalar_per_obs_(dd.ndims[idata])
+
+            for (localn,n) in enumerate(nrange) # time
                 if localn == centraln
                     for k = 0:(nscalar_per_obs-1)
                         for j = 1:sz[2]
@@ -437,7 +437,7 @@ function getxy!(dd::NCData{T,3},ind::Integer,xin,xtrue) where T
                         end
                     end
                 end
-                offset += nscalar_per_obs_(dd.ndims[idata])
+                offset += nscalar_per_obs
             end
         end
 

@@ -646,7 +646,7 @@ at the epochs defined by `save_epochs`.
  * `learning_rate`: intial learning rate of the ADAM optimizater (default `0.001`)
  * `learning_rate_decay_epoch`: The exponential recay rate of the leaning rate. After `learning_rate_decay_epoch` the learning rate is halved. The learning rate is compute as  `learning_rate * 0.5^(epoch / learning_rate_decay_epoch)`. `learning_rate_decay_epoch` can be `Inf` for a constant learning rate (default)
  * `min_std_err`: minimum error standard deviation preving a division close to zero (default `exp(-5) = 0.006737946999085467`)
- * `loss_weights_refine`: The weigh of the individual refinement layers using in the cost function. 
+ * `loss_weights_refine`: The weigh of the individual refinement layers using in the cost function.
 If `loss_weights_refine` has a single element, then there is no refinement.  (default `(1.,)`)
 
 
@@ -686,14 +686,6 @@ function reconstruct(Atype,data_all,fnames_rec;
     else
         nscalar_per_obs = 5
     end
-
-    if !is3D
-        nvar = 2 + 2*length(cycle_periods) + nscalar_per_obs*ntime_win*length(data_all[1])
-    else
-        nvar = 2 + 2*length(cycle_periods) + nscalar_per_obs*length(data_all[1])
-    end
-
-    enc_nfilter = vcat([nvar],enc_nfilter_internal)
 
     @info "Number of threads: $(Threads.nthreads())"
 
@@ -742,8 +734,6 @@ function reconstruct(Atype,data_all,fnames_rec;
 
     @info "Output variables:  $output_varnames"
 
-    @info "Number of filters in encoder: $enc_nfilter"
-    @info "Number of filters in decoder: $dec_nfilter"
     inputs_,xtrue = first(train)
 
     @debug begin
@@ -756,6 +746,13 @@ function reconstruct(Atype,data_all,fnames_rec;
 
     @info "Input size:        $(format_size(sz))"
     @info "Input sum:         $(sum(inputs_))"
+
+    nvar = sz[end-1]
+    enc_nfilter = vcat([nvar],enc_nfilter_internal)
+
+    @info "Number of filters in encoder: $enc_nfilter"
+    @info "Number of filters in decoder: $dec_nfilter"
+
 
     gamma = log(min_std_err^(-2))
     @info "Gamma:             $gamma"
@@ -828,8 +825,8 @@ function reconstruct(Atype,data_all,fnames_rec;
         N = 0
         loss_sum = 0
         # loop over training datasets
-        #for (ii,loss) in enumerate(adam(model, DINCAE.PrefetchDataIter(train); gclip = clip_grad, lr = lr))
-            for (ii,loss) in enumerate(adam(model, train; gclip = clip_grad, lr = lr))
+        for (ii,loss) in enumerate(adam(model, DINCAE.PrefetchDataIter(train); gclip = clip_grad, lr = lr))
+        #for (ii,loss) in enumerate(adam(model, train; gclip = clip_grad, lr = lr))
             loss_sum += loss
             N += 1
         end
