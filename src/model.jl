@@ -329,7 +329,7 @@ function (model::StepModel)(xin)
     return transform_mσ2(xout,model.gamma)
 end
 
-function (model::StepModel)(xin,xtrue)
+ function (model::StepModel)(xin,xtrue)
     N = ndims(xin)
     noutput = size(xtrue,N-1) ÷ 2
     xout = model.chains[1](xin)
@@ -359,36 +359,22 @@ function (model::StepModel)(xin,xtrue)
     return loss
 end
 
-#=
-"""
-"""
-=#
+
+# Model
+struct ModelChainLoss{TC,TL}
+    chain::TC
+    costfun::TL
+end
+
+function (model::ModelChainLoss)(xin)
+    return model.chain(xin)
+end
+
+function (model::ModelChainLoss)(xin,xtrue)
+    return model.costfun(model(xin),xtrue)
+end
 
 
-
-
-
-#=
-
-imax,jmax = size(mask)
-
-reduce = 2^length(enc_nfilter_internal)
-# size after encoder part of convolutional network
-
-sz_inner = (imax ÷ reduce,
-            jmax ÷ reduce,
-            enc_nfilter_internal[end])
-
-ndensein = prod(sz_inner)
-
-@show ndensein
-
-
-inner = Chain((Dense(ndensein,ndensein ÷ 5,dropout_rate_train),
-               Dense(ndensein ÷ 5,ndensein,dropout_rate_train),
-               x -> reshape(x,(sz_inner[1],sz_inner[2],sz_inner[3],:)),
-               ))
-=#
 
 # mode=0: 0 for max, 1 for average including padded values, 2 for average excluding padded values.
 #const pool_mode = 0; # max pooling
@@ -874,7 +860,7 @@ function reconstruct(Atype,data_all,fnames_rec;
         ds_.attrib["learning_rate"] = learning_rate
         ds_.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
         ds_.attrib["min_std_err"] = min_std_err
-        ds_.attrib["loss_weights_refine"] = Vector{Int}(collect(loss_weights_refine))
+        ds_.attrib["loss_weights_refine"] = Vector{Float64}(collect(loss_weights_refine))
         ds_.attrib["cycle_periods"] = Vector{Float64}(collect(cycle_periods))
 
         close(ds_)

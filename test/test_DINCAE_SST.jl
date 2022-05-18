@@ -43,10 +43,13 @@ save_epochs = [epochs]
 is3D = false
 ntime_win = 3
 
-for (upsampling_method,is3D,truth_uncertain) = ((:nearest,false,false),
-                                (:bilinear,false,false),
-                                (:nearest,true,false),
-                                (:nearest,false,true))
+for (upsampling_method,is3D,truth_uncertain,loss_weights_refine) = (
+    (:nearest, false,false, (1.,)),
+    (:bilinear,false,false, (1.,)),
+    (:nearest, true, false, (1.,)),
+    (:nearest, false,true,  (1.,)),
+    (:nearest, false,false, (0.3,0.7)),
+)
 
     fnames_rec = [tempname()]
 
@@ -61,14 +64,15 @@ for (upsampling_method,is3D,truth_uncertain) = ((:nearest,false,false),
         is3D = is3D,
         upsampling_method = upsampling_method,
         ntime_win = ntime_win,
+        loss_weights_refine = loss_weights_refine,
     )
-
 
     @test isfile(fnames_rec[1])
 
     NCDataset(fnames_rec[1]) do ds
         losses = ds["losses"][:]
         @test length(losses) == epochs
+        @show losses[end]
     end
     rm(fnames_rec[1])
 end
