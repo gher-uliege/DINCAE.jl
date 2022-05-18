@@ -349,7 +349,7 @@ end
 
     #@show loss
     for i = 2:length(model.chains)
-        xout = model.chains[i](cat(xout[:,:,1:(2*noutput),:],xin,dims=3))
+        xout = model.chains[i](cat(xout,xin,dims=3))
         loss += model.loss_weights[i] *
             model.costfun(model.final_layer(xout),xtrue)
         #@show loss
