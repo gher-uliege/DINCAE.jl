@@ -69,7 +69,7 @@ function load_gridded_nc(data::AbstractVector{NamedTuple{(:filename, :varname, :
     return load_gridded_nc([(d...,isoutput = i==1) for (i,d) in enumerate(data)])
 end
 
-function load_gridded_nc(data::AbstractVector{NamedTuple{(:filename, :varname, :obs_err_std, :jitter_std, :isoutput, :ndims),T}}) where {T}
+function load_gridded_nc(data) where {T}
     lon,lat,datatime,data_full1,missingmask,mask = load_gridded_nc(data[1].filename,data[1].varname);
     sz = size(data_full1)
     data_full = zeros(Float32,sz[1],sz[2],length(data),sz[4]);
