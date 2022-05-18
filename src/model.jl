@@ -681,12 +681,6 @@ function reconstruct(Atype,data_all,fnames_rec;
     varname = data_all[1][1].varname
     output_ndims == 2
 
-    if output_ndims == 1
-        nscalar_per_obs = 2
-    else
-        nscalar_per_obs = 5
-    end
-
     @info "Number of threads: $(Threads.nthreads())"
 
     # first element in data_all is for training
@@ -729,7 +723,8 @@ function reconstruct(Atype,data_all,fnames_rec;
 
         noutput = output_ndims
         # 5 (u,v) and lower matrix of P
-        dec_nfilter = vcat([5],enc_nfilter_internal)
+        dec_nfilter = vcat([nscalar_per_obs_(output_ndims)],
+                           enc_nfilter_internal)
     end
 
     @info "Output variables:  $output_varnames"
@@ -759,21 +754,18 @@ function reconstruct(Atype,data_all,fnames_rec;
 
     @info "Number of filters: $enc_nfilter"
     if loss_weights_refine == (1.,)
-        if output_ndims == 1
-            model = Model(DINCAE.recmodel4(
+        chain = DINCAE.recmodel4(
                 sz[1:end-2],
                 enc_nfilter,
                 dec_nfilter,
                 skipconnections,
-                method = upsampling_method),truth_uncertain,gamma)
+                method = upsampling_method)
+
+        if output_ndims == 1
+            model = Model(chain,truth_uncertain,gamma)
         else
             model = ModelVector2_1(
-                DINCAE.recmodel4(
-                    sz[1:end-2],
-                    enc_nfilter,
-                    dec_nfilter,
-                    skipconnections,
-                    method = upsampling_method),
+                chain,
                 truth_uncertain,gamma,Atype(direction_obs))
         end
     else
@@ -781,8 +773,7 @@ function reconstruct(Atype,data_all,fnames_rec;
         println("Step model")
 
         enc_nfilter2 = copy(enc_nfilter)
-        # update for vector fields
-        enc_nfilter2[1] += 2*noutput
+        enc_nfilter2[1] += dec_nfilter[1]
         dec_nfilter2 = copy(dec_nfilter)
         @info "Number of filters in encoder (refinement): $enc_nfilter2"
         @info "Number of filters in decoder (refinement): $dec_nfilter2"
