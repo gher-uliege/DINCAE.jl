@@ -304,29 +304,39 @@ function (model::Model)(inputs_,xtrue)
 end
 
 # Model
-struct StepModel
+struct StepModel{F1,F2}
     chains
-    noutput
     loss_weights
-    truth_uncertain
-    gamma
     regularization_L1
     regularization_L2
+    final_layer::F1
+    costfun::F2
 end
 
 weights(model::StepModel) = reduce(vcat,weights.(model.chains))
 
-function StepModel(chains,noutput,loss_weights,truth_uncertain,gamma)
-    return StepModel(chains,noutput,loss_weights,truth_uncertain,gamma,0.f0,0.f0)
+function StepModel(
+    chains,loss_weights,truth_uncertain,gamma;
+    regularization_L1 = 0.f0,
+    regularization_L2 = 0.f0,
+    final_layer = xout -> transform_mσ2(xout,gamma),
+    costfun = (xout,xtrue) -> costfun(xout,xtrue,truth_uncertain),
+    )
+    return StepModel(
+        chains,loss_weights,
+        regularization_L1, regularization_L2,
+        final_layer,
+        costfun,
+    )
 end
 
 function (model::StepModel)(xin)
     xout = model.chains[1](xin)
 
     for i = 2:length(model.chains)
-        xout = model.chains[i](cat(xout[:,:,1:(2*model.noutput),:],xin,dims=3))
+        xout = model.chains[i](cat(xout,xin,dims=3))
     end
-    return transform_mσ2(xout,model.gamma)
+    return model.final_layer(xout)
 end
 
  function (model::StepModel)(xin,xtrue)
@@ -335,13 +345,13 @@ end
     xout = model.chains[1](xin)
 
     loss = model.loss_weights[1] *
-        costfun(transform_mσ2(xout,model.gamma),xtrue,model.truth_uncertain)
+        model.costfun(model.final_layer(xout),xtrue)
 
     #@show loss
     for i = 2:length(model.chains)
         xout = model.chains[i](cat(xout[:,:,1:(2*noutput),:],xin,dims=3))
         loss += model.loss_weights[i] *
-            costfun(transform_mσ2(xout,model.gamma),xtrue,model.truth_uncertain)
+            model.costfun(model.final_layer(xout),xtrue)
         #@show loss
     end
 
@@ -764,10 +774,10 @@ function reconstruct(Atype,data_all,fnames_rec;
         @info "Number of filters in encoder (refinement): $enc_nfilter2"
         @info "Number of filters in decoder (refinement): $dec_nfilter2"
 
-        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
-                 DINCAE.recmodel4(sz[1:2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
+        steps = (DINCAE.recmodel4(sz[1:end-2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
+                 DINCAE.recmodel4(sz[1:end-2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
 
-        model = StepModel(steps,noutput,loss_weights_refine,truth_uncertain,gamma)
+        model = StepModel(steps,loss_weights_refine,truth_uncertain,gamma)
     end
 
     xrec = model(Atype(inputs_))

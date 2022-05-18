@@ -579,24 +579,19 @@ function reconstruct_points(
     if loss_weights_refine == (1.,)
         println("no refine")
         steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method) ,)
-        model = DINCAE.StepModel(steps,noutput,loss_weights_refine,truth_uncertain,gamma,
-                                 regularization_L1_beta,regularization_L2_beta)
-
-        #model = DINCAE.Model(DINCAE.recmodel_bn(sz[1:2],enc_nfilter; method = upsampling_method),truth_uncertain)
-        #model = DINCAE.Model(DINCAE.recmodel_noskip(sz[1:2],enc_nfilter; method = upsampling_method),truth_uncertain)
     else
         enc_nfilter2 = copy(enc_nfilter)
-        enc_nfilter2[1] += 2*noutput
+        enc_nfilter2[1] += dec_nfilter[1]
         dec_nfilter2 = copy(enc_nfilter2)
 
         steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
                  DINCAE.recmodel4(sz[1:2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
-
-        #model1 = DINCAE.Model(chain1,truth_uncertain)
-        #model2
-        model = StepModel(steps,loss_weights_refine,truth_uncertain,gamma,
-                          regularization_L1_beta,regularization_L2_beta)
     end
+    model = StepModel(
+        steps,loss_weights_refine,truth_uncertain,gamma;
+        regularization_L1 = regularization_L1_beta,
+        regularization_L2 = regularization_L2_beta,
+    )
 
     #=
     i = 5

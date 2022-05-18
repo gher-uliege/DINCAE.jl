@@ -32,7 +32,7 @@ data = [
 data_test = data;
 data_all = [data,data_test]
 
-epochs = 2
+epochs = 3
 batch_size = 5
 save_each = 10
 skipconnections = [1,2]
