@@ -704,22 +704,13 @@ function reconstruct(Atype,data_all,fnames_rec;
 
     @info "Number of filters: $enc_nfilter"
     if loss_weights_refine == (1.,)
-        chain = DINCAE.recmodel4(
-                sz[1:end-2],
+        steps = (DINCAE.recmodel4(
+            sz[1:end-2],
                 enc_nfilter,
                 dec_nfilter,
                 skipconnections,
-                method = upsampling_method)
-
-        if output_ndims == 1
-            model = StepModel((chain,),loss_weights_refine,truth_uncertain,gamma)
-        else
-            model = ModelVector2_1(
-                chain,
-                truth_uncertain,gamma,Atype(direction_obs))
-        end
+                method = upsampling_method),)
     else
-        @assert output_ndims == 1
         println("Step model")
 
         enc_nfilter2 = copy(enc_nfilter)
@@ -730,8 +721,16 @@ function reconstruct(Atype,data_all,fnames_rec;
 
         steps = (DINCAE.recmodel4(sz[1:end-2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
                  DINCAE.recmodel4(sz[1:end-2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
+    end
 
+    if output_ndims == 1
         model = StepModel(steps,loss_weights_refine,truth_uncertain,gamma)
+    else
+        model = StepModel(
+            steps,loss_weights_refine,truth_uncertain,gamma;
+            final_layer = identity,
+            costfun = (xrec,xtrue) -> vector2_costfun(xrec,xtrue,truth_uncertain,Atype(direction_obs)),
+        )
     end
 
     xrec = model(Atype(inputs_))
