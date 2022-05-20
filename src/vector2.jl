@@ -55,10 +55,12 @@ function vector2_costfun(xrec,xtrue,truth_uncertain,directionobs)
 
     # interpolate to location of observations
     # output should be the same shape as m_true
-    obsoper(x::Union{KnetArray{T,2},AbstractArray{T,2}}) where T = repeat(x,(1,1,nsites))
+    #obsoper(x::Union{KnetArray{T,2},AbstractArray{T,2}}) where T = repeat(x,(1,1,nsites))
     #obsoper(x::AbstractArray{T,3}) where T = mapslices(obsoper,x,dims=(1,2))
     #obsoper(x::AbstractArray{T,3}) where T = x
-    function obsoper(x::Union{KnetArray{T,3},AbstractArray{T,3},AutoGrad.Result{KnetArray{T,3}},AutoGrad.Result{Array{T,3}}}) where T
+    #function obsoper(x::Union{KnetArray{T,3},AbstractArray{T,3},CuArray{T,3},
+    #                          AutoGrad.Result{KnetArray{T,3}},AutoGrad.Result{CuArray{T,3}},AutoGrad.Result{Array{T,3}}}) where T
+    function obsoper(x)
         tmp = reshape(x,(size(x)[1:2]...,1,size(x,3)))
         #repeat(tmp,inner=(1,1,nsites,1))
         # https://github.com/denizyuret/Knet.jl/issues/635

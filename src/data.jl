@@ -748,11 +748,13 @@ function Base.iterate(d::DataBatches{Atype,T,N},index = 0) where {Atype,T,N}
     end
 
     inputs_,xtrue = d.batch
-    for ibatch = 1:length(bs)
+
+#    for ibatch = 1:length(bs)
 #    Threads.@threads for ibatch = 1:length(bs)
-#    ThreadsX.foreach(1:length(bs)) do ibatch
+    ThreadsX.foreach(1:length(bs)) do ibatch
         #@show Threads.threadid(), ibatch
         j = bs[ibatch]
+
         if N == 3
             getobs!(d.data,((@view inputs_[:,:,:,ibatch]),(@view xtrue[:,:,:,ibatch])),d.perm[j])
         else
