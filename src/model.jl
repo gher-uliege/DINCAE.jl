@@ -612,6 +612,7 @@ function reconstruct(Atype,data_all,fnames_rec;
                      enc_nfilter_internal = [16,24,36,54],
                      skipconnections = 2:(length(enc_nfilter_internal)+1),
                      clip_grad = 5.0,
+                     regularization_L1_beta = 0,
                      regularization_L2_beta = 0,
                      save_epochs = 200:10:epochs,
                      is3D = false,
@@ -724,12 +725,18 @@ function reconstruct(Atype,data_all,fnames_rec;
     end
 
     if output_ndims == 1
-        model = StepModel(steps,loss_weights_refine,truth_uncertain,gamma)
+        model = StepModel(
+            steps,loss_weights_refine,truth_uncertain,gamma;
+            regularization_L1 = regularization_L1_beta,
+            regularization_L2 = regularization_L2_beta,
+        )
     else
         model = StepModel(
             steps,loss_weights_refine,truth_uncertain,gamma;
             final_layer = identity,
             costfun = (xrec,xtrue) -> vector2_costfun(xrec,xtrue,truth_uncertain,Atype(direction_obs)),
+            regularization_L1 = regularization_L1_beta,
+            regularization_L2 = regularization_L2_beta,
         )
     end
 
