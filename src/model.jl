@@ -626,6 +626,7 @@ function reconstruct(Atype,data_all,fnames_rec;
                      output_ndims = 1,
                      direction_obs = nothing,
                      remove_mean = true,
+                     paramfile = nothing,
 )
     DB(Atype,d,batch_size) = (Atype.(tmp) for tmp in DataLoader(d,batch_size))
 
@@ -813,27 +814,29 @@ function reconstruct(Atype,data_all,fnames_rec;
         shuffle!(train)
     end
 
-    for ds_ in ds
-        defVar(ds_,"losses",losses,("epochs",))
+    close.(ds)
 
-        ds_.attrib["epochs"] = epochs
-        ds_.attrib["batch_size"] = batch_size
-        ds_.attrib["truth_uncertain"] = Int(truth_uncertain)
-        ds_.attrib["enc_nfilter_internal"] = Vector{Int}(collect(enc_nfilter_internal))
-        ds_.attrib["skipconnections"] = Vector{Int}(collect(skipconnections))
-        ds_.attrib["clip_grad"] = clip_grad
-        ds_.attrib["regularization_L2_beta"] = regularization_L2_beta
-        ds_.attrib["save_epochs"] = Vector{Int}(save_epochs)
-        ds_.attrib["is3D"] = Int(is3D)
-        ds_.attrib["upsampling_method"] = string(upsampling_method)
-        ds_.attrib["ntime_win"] = ntime_win
-        ds_.attrib["learning_rate"] = learning_rate
-        ds_.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
-        ds_.attrib["min_std_err"] = min_std_err
-        ds_.attrib["loss_weights_refine"] = Vector{Float64}(collect(loss_weights_refine))
-        ds_.attrib["cycle_periods"] = Vector{Float64}(collect(cycle_periods))
-
-        close(ds_)
+    if paramfile !== nothing
+        NCDataset(paramfile,"c") do ds_
+            defVar(ds_,"losses",losses,("epochs",))
+            ds_.attrib["epochs"] = epochs
+            ds_.attrib["batch_size"] = batch_size
+            ds_.attrib["truth_uncertain"] = Int(truth_uncertain)
+            ds_.attrib["enc_nfilter_internal"] = Vector{Int}(collect(enc_nfilter_internal))
+            ds_.attrib["skipconnections"] = Vector{Int}(collect(skipconnections))
+            ds_.attrib["clip_grad"] = clip_grad
+            ds_.attrib["regularization_L1_beta"] = regularization_L1_beta
+            ds_.attrib["regularization_L2_beta"] = regularization_L2_beta
+            ds_.attrib["save_epochs"] = Vector{Int}(save_epochs)
+            ds_.attrib["is3D"] = Int(is3D)
+            ds_.attrib["upsampling_method"] = string(upsampling_method)
+            ds_.attrib["ntime_win"] = ntime_win
+            ds_.attrib["learning_rate"] = learning_rate
+            ds_.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
+            ds_.attrib["min_std_err"] = min_std_err
+            ds_.attrib["loss_weights_refine"] = Vector{Float64}(collect(loss_weights_refine))
+            ds_.attrib["cycle_periods"] = Vector{Float64}(collect(cycle_periods))
+        end
     end
 
     return losses
