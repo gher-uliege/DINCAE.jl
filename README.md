@@ -2,6 +2,9 @@
 [![codecov.io](http://codecov.io/github/gher-ulg/DINCAE.jl/coverage.svg?branch=main)](http://codecov.io/github/gher-ulg/DINCAE.jl?branch=main)
 [![documentation stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gher-ulg.github.io/DINCAE.jl/stable/)
 [![documentation dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gher-ulg.github.io/DINCAE.jl/dev/)
+[![DOI](https://zenodo.org/badge/193079989.svg)](https://zenodo.org/badge/latestdoi/193079989)
+
+
 
 # DINCAE.jl
 
