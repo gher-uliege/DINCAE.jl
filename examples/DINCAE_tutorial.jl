@@ -135,6 +135,7 @@ else
     Atype = Array{F}
 end
 
+Knet.atype() = Atype
 
 # Setting the paramenters of neural network
 # see document of DINCAE.reconstruct for more information
