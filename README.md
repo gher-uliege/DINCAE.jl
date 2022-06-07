@@ -57,6 +57,12 @@ After this, you should be able to load `DINCAE` with:
 using DINCAE
 ```
 
+#### Checking CUDA installation
+To conform that `CUDA` is functional to use the GPU (otherwise the CPU is used and the code will be much slower), the following command:
+```julia
+CUDA.functional() 
+```
+should return `true`.
 
 ### Updating DINCAE
 
