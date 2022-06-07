@@ -14,6 +14,24 @@
 # This notebook/script is indented to be run on a GPU with CUDA support (NVIDIA GPU)
 # with a least 8 GB of RAM.
 
+# The modules necessary to run the tutorial can be install with:
+#
+# ```julia
+# using Pkg
+# Pkg.activate("/file/path/") # needs to be repeated for every session
+# Pkg.instantiate() # install all package
+# ```
+#
+# where `"/file/path/"` is the path containing this file and the file `Project.toml`.
+# *Alternatively*, one can also install the modules in the default environement
+# with:
+#
+# ```julia
+# using Pkg
+# Pkg.add("CUDA","Knet","NCDatasets","PyPlot")
+# ```
+#
+# See also https://github.com/gher-ulg/DINCAE.jl#installation
 #
 # Load the necessary modules
 
