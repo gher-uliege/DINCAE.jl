@@ -1,6 +1,6 @@
 # # Tutorial on DINCAE
 #
-# This script/notebook reconstruct missing data in satellite data using a neural
+# This script/notebook reconstructs missing data in satellite data using a neural
 # network architecture called convolutional auto-encoder described in the
 # following articles:
 #
@@ -30,7 +30,7 @@ using PyPlot
 # First we define the domain and time interval.
 #
 # The example is tested here for a short time frame but for realistic
-# application one should use a much longer time-range (like 10, 20 years or more)
+# applications one should use a much longer time-range (like 10, 20 years or more)
 
 # longitude range (east, west)
 lon_range = [-7, -0.8]
@@ -54,7 +54,7 @@ fname = joinpath(localdir,"modis_cleanup.nc")
 fname_cv = joinpath(localdir,"modis_cleanup_add_clouds.nc")
 varname = "sst"
 
-# Results of DINCAE will be places in a sub-directory under `localdir`
+# Results of DINCAE will be placed in a sub-directory under `localdir`
 
 outdir = joinpath(localdir,"Results")
 mkpath(outdir)
@@ -89,7 +89,7 @@ qual = ds["qual_sst"][:,:,:];
 
 # We ignore all data points with missing quality flags,
 # quality indicator exceeding 3 and temperature
-# larger than 40 °C
+# larger than 40°C
 
 sst_t = copy(sst)
 sst_t[(qual .> 3) .& .!ismissing.(qual)] .= missing
@@ -113,7 +113,7 @@ close(ds2)
 DINCAE_utils.add_mask(fname,varname; minseafrac = 0.05)
 
 # Choose cross-validation points by adding clouds to the cleanest
-# images (copied from the most cloudiest images). This function will generate
+# images (copied from the cloudiest images). This function will generate
 # a file `fname_cv`.
 
 DINCAE_utils.addcvpoint(fname,varname; mincvfrac = 0.10);
@@ -126,7 +126,7 @@ DINCAE_utils.addcvpoint(fname,varname; mincvfrac = 0.10);
 
 const F = Float32
 
-# Test if CUDA is functional to use the GPU otherwise the CPU is used.
+# Test if CUDA is functional to use the GPU, otherwise the CPU is used.
 
 if CUDA.functional()
     Atype = KnetArray{F}
@@ -162,8 +162,8 @@ data_test = data;
 fnames_rec = [joinpath(outdir,"data-avg.nc")]
 data_all = [data,data_test]
 
-#epochs = 10
-#save_epochs = epochs:epochs
+# epochs = 10
+# save_epochs = epochs:epochs
 
 # Start the training and reconstruction of the neural network
 
@@ -186,7 +186,7 @@ ylim(extrema(loss[2:end]))
 xlabel("epochs")
 ylabel("loss");
 
-## Post process results
+# # Post process results
 #
 # Compute the RMS with the independent validation data
 
