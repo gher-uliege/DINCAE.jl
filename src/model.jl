@@ -785,6 +785,7 @@ function reconstruct(Atype,data_all,fnames_rec;
         #end
         push!(losses,loss_sum/N)
         println("epoch: $(@sprintf("%5d",e )) loss $(@sprintf("%5.4f",losses[end]))")
+        flush(stdout)
 
         if e ∈ save_epochs
             println("Save output $e")

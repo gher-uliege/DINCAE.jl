@@ -625,6 +625,7 @@ function reconstruct_points(
 
             if (ii-1) % 20 == 0
                 println("epoch: $(@sprintf("%5d",e )) loss $(@sprintf("%5.4f",loss)) $lr")
+                flush(stdout)
             end
         end
 
