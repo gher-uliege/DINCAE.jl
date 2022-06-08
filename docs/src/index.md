@@ -36,3 +36,11 @@ DINCAE.load_gridded_nc
 DINCAE.NCData
 ```
 
+## Reducing GPU memory usage
+
+Convolutional neural networks can require "a lot" of GPU memory. These parameters can affect GPU memory utilisation:
+
+* reduce the mini-batch size
+* use fewer layers (e.g. `enc_nfilter_internal` = [16,24,36] or [16,24])
+* use less filters (reduce the values of the optional parameter enc_nfilter_internal)
+* use a smaller domain or lower resolution
