@@ -52,6 +52,7 @@ for (upsampling_method,is3D,truth_uncertain,loss_weights_refine) = (
 )
 
     fnames_rec = [tempname()]
+    paramfile = tempname()
 
     losses = DINCAE.reconstruct(
         Atype,data_all,fnames_rec;
@@ -65,11 +66,12 @@ for (upsampling_method,is3D,truth_uncertain,loss_weights_refine) = (
         upsampling_method = upsampling_method,
         ntime_win = ntime_win,
         loss_weights_refine = loss_weights_refine,
+        paramfile = paramfile,
     )
 
     @test isfile(fnames_rec[1])
 
-    NCDataset(fnames_rec[1]) do ds
+    NCDataset(paramfile) do ds
         losses = ds["losses"][:]
         @test length(losses) == epochs
         @show losses[end]
