@@ -33,6 +33,11 @@
 #
 # See also https://github.com/gher-ulg/DINCAE.jl#installation
 #
+# If you use Windows, it is necessary to create a `.dodsrc` file as explained
+# here:
+# * https://alexander-barth.github.io/NCDatasets.jl/latest/issues/#OPeNDAP-on-Windows-fails-with-Assertion-failed:-ocpanic
+# * https://github.com/Unidata/netcdf-c/issues/2380
+#
 # Load the necessary modules
 
 using CUDA
@@ -111,7 +116,7 @@ qual = ds["qual_sst"][:,:,:];
 
 sst_t = copy(sst)
 sst_t[(qual .> 3) .& .!ismissing.(qual)] .= missing
-sst_t[.!ismissing.(sst) .& (sst_t .> 40)] .= missing
+sst_t[(sst_t .> 40) .& .!ismissing.(sst_t)] .= missing
 
 @info "number of missing observations: $(count(ismissing,sst_t))"
 @info "number of valid observations: $(count(.!ismissing,sst_t))"
@@ -180,6 +185,8 @@ data = [
 data_test = data;
 fnames_rec = [joinpath(outdir,"data-avg.nc")]
 data_all = [data,data_test]
+
+# Use these parameters for a quick test:
 
 # epochs = 10
 # save_epochs = epochs:epochs
