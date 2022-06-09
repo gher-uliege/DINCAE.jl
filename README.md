@@ -4,7 +4,7 @@
 [![documentation dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gher-ulg.github.io/DINCAE.jl/dev/)
 [![DOI](https://zenodo.org/badge/193079989.svg)](https://zenodo.org/badge/latestdoi/193079989)
 
-
+[![Issues](https://img.shields.io/github/issues-raw/gher-ulg/DINCAE.jl?style=plastic)](https://github.com/gher-ulg/DINCAE.jl/issues)
 
 # DINCAE.jl
 
