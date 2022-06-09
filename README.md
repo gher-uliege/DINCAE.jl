@@ -32,14 +32,14 @@ DINCAE is indented to be used with a [GPU](https://en.wikipedia.org/wiki/Graphic
 ## Installation
 
 You need [Julia](https://julialang.org/downloads) (version 1.7 or later) to run `DINCAE`. The command line interface of Julia is sufficient for `DINCAE`.
-If you are using Linux (on a x86_64 CPU), installing and running Julia 1.7.2 is as easy as running these shell commands:
+If you are using Linux (on a x86_64 CPU), installing and running Julia 1.7.3 is as easy as running these shell commands:
 
 ```bash
-curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz | tar -xzf -
-julia-1.7.2/bin/julia
+curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.3-linux-x86_64.tar.gz | tar -xzf -
+julia-1.7.3/bin/julia
 ```
 
-This installs Julia in the current directory under the folder `julia-1.7.2`.
+This installs Julia in the current directory under the folder `julia-1.7.3`.
 For more information and other platforms, please see [platform specific instructions](https://julialang.org/downloads/platform/) for further installation instructions.
 You can check the latest available version of Julia at https://julialang.org/downloads but avoid beta releases and release candidates if you are new to Julia.
 
