@@ -523,7 +523,7 @@ function reconstruct_points(
     clip_grad = 5.0,
     regularization_L1_beta = 0,
     regularization_L2_beta = 0,
-    save_epochs = 60:10:epochs,
+    save_epochs = min(epochs,60):10:epochs,
     upsampling_method = :nearest,
     probability_skip_for_training = 0.2,
     jitter_std_pos = (5f0,5f0),
@@ -535,6 +535,10 @@ function reconstruct_points(
     auxdata_files = [],
     savesnapshot = false,
 )
+
+    if isempty(save_epochs) || epochs < minimum(save_epochs)
+        error("No output will be saved. Consider to adjust save_epochs (currently $save_epochs) or epochs (currently $epochs).")
+    end
 
     fname_rec = fnames_rec[1]
 

@@ -83,3 +83,10 @@ NCDataset(fnames_rec[1]) do ds
     @test size(ds[varname],2)  == length(latr)
 end
 
+
+
+@test_throws Exception DINCAE.reconstruct_points(
+    T,Atype,filename,varname,grid,fnames_rec;
+    epochs = 2,
+    save_epochs = [],
+)

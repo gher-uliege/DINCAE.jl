@@ -73,3 +73,12 @@ for (upsampling_method,is3D,truth_uncertain) = ((:nearest,false,false),
     rm(fnames_rec[1])
 end
 
+
+
+
+fnames_rec = [tempname()]
+@test_throws Exception DINCAE.reconstruct(
+        Atype,data_all,fnames_rec;
+        epochs = 2,
+        save_epochs = [],
+    )
