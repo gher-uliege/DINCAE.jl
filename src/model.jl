@@ -110,6 +110,21 @@ Conv(w::NTuple{2},cx,cy,f = relu) = Conv(param(w[1],w[2],cx,cy), param0(1,1,cy,1
 Conv(w::NTuple{3},cx,cy,f = relu) = Conv(param(w[1],w[2],w[3],cx,cy), param0(1,1,1,cy,1), f)
 
 
+# Define transposed convolutional layer:
+struct ConvTranspose
+    w
+    b
+    f
+    stride
+    pad
+end
+export ConvTranspose
+
+(c::ConvTranspose)(x) = c.f.(deconv4(c.w, x, padding = c.pad,stride = c.stride) .+ c.b)
+
+ConvTranspose(w::NTuple{2},(cx,cy),f = relu; stride=1, pad=0) =
+    ConvTranspose(param(w...,cy,cx), param0(1,1,cy,1), f, stride, pad)
+
 
 # Chain of layers
 struct Chain
@@ -478,7 +493,8 @@ function recmodel4(sz,enc_nfilter,dec_nfilter,skipconnections,l=1; method = :nea
                        recmodel4(sz_small,enc_nfilter,dec_nfilter,skipconnections,l+1, method = method),
                        Upsample(sz_small, enc_nfilter[l+1], method = method),
                        x -> croppadding(x,odd),
-                       Conv(convkernel,dec_nfilter[l+1],dec_nfilter[l],f)))
+                       Conv(convkernel,dec_nfilter[l+1],dec_nfilter[l],f)
+                       ))
 
         if l in skipconnections
             println("skip connections at level $l")
