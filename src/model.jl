@@ -491,13 +491,16 @@ function recmodel4(sz,enc_nfilter,dec_nfilter,skipconnections,l=1; method = :nea
     if l == length(enc_nfilter)
         return identity
     else
-        inner = Chain((Conv(convkernel,enc_nfilter[l],enc_nfilter[l+1]),
-                       mypool,
-                       recmodel4(sz_small,enc_nfilter,dec_nfilter,skipconnections,l+1, method = method),
+        inner = Chain((
+            Conv(convkernel,enc_nfilter[l],enc_nfilter[l+1]),
+            mypool,
+            recmodel4(sz_small,enc_nfilter,dec_nfilter,skipconnections,l+1, method = method),
                        Upsample(sz_small, enc_nfilter[l+1], method = method),
                        x -> croppadding(x,odd),
-                       Conv(convkernel,dec_nfilter[l+1],dec_nfilter[l],f)
-                       ))
+                       Conv(convkernel,dec_nfilter[l+1],dec_nfilter[l],f),
+#            ConvTranspose(upkernel,dec_nfilter[l+1] => dec_nfilter[l],f,stride=2),
+#            x -> croppadding(x,odd),
+        ))
 
         if l in skipconnections
             println("skip connections at level $l")
