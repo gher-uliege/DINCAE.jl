@@ -122,8 +122,11 @@ export ConvTranspose
 
 (c::ConvTranspose)(x) = c.f.(deconv4(c.w, x, padding = c.pad,stride = c.stride) .+ c.b)
 
-ConvTranspose(w::NTuple{2},(cx,cy),f = relu; stride=1, pad=0) =
+ConvTranspose(w::NTuple{2},(cx,cy),f = identity; stride=1, pad=0) =
     ConvTranspose(param(w...,cy,cx), param0(1,1,cy,1), f, stride, pad)
+
+ConvTranspose(w::NTuple{3},(cx,cy),f = identity; stride=1, pad=0) =
+    ConvTranspose(param(w...,cy,cx), param0(1,1,1,cy,1), f, stride, pad)
 
 
 # Chain of layers
@@ -172,7 +175,7 @@ ConvBN(w::NTuple{2},cx,cy,f = relu) = ConvBN(param(w[1],w[2],cx,cy), param0(1,1,
 ConvBN(w::NTuple{3},cx,cy,f = relu) = ConvBN(param(w[1],w[2],w[3],cx,cy), param0(1,1,1,cy,1), BatchNorm(cy), f)
 
 
-weights(m::Union{Dense,BatchNorm,Conv,ConvBN}) = [m.w]
+weights(m::Union{Dense,BatchNorm,Conv,ConvBN,ConvTranspose}) = [m.w]
 
 """
 transform x[:,:,1,:] and x[:,:,2,:] to mean and error variance
