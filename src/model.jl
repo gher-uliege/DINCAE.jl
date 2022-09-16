@@ -636,7 +636,7 @@ function reconstruct(Atype,data_all,fnames_rec;
                      clip_grad = 5.0,
                      regularization_L1_beta = 0,
                      regularization_L2_beta = 0,
-                     save_epochs = 200:10:epochs,
+                     save_epochs = min(epochs,200):10:epochs,
                      is3D = false,
                      upsampling_method = :nearest,
                      ntime_win = 3,
@@ -651,6 +651,10 @@ function reconstruct(Atype,data_all,fnames_rec;
                      paramfile = nothing,
 )
     DB(Atype,d,batch_size) = (Atype.(tmp) for tmp in DataLoader(d,batch_size))
+
+    if isempty(save_epochs) || epochs < minimum(save_epochs)
+        error("No output will be saved. Consider to adjust save_epochs (currently $save_epochs) or epochs (currently $epochs).")
+    end
 
     varname = data_all[1][1].varname
     output_ndims == 2

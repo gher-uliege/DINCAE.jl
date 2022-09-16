@@ -81,7 +81,6 @@ end
 
 
 
-
 data = [
    (filename = filename,
     varname = "SST",
@@ -120,3 +119,13 @@ size(first(data_iter)[2])
 
 # mirlo: 3.645 ms
 #@btime first($data_iter);
+
+
+
+fnames_rec = [tempname()]
+@test_throws Exception DINCAE.reconstruct(
+        Atype,data_all,fnames_rec;
+        epochs = 2,
+        save_epochs = [],
+    )
+
