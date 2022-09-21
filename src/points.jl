@@ -617,21 +617,20 @@ function reconstruct_points(
     meandata = zeros(sz[1:2]);
     ds = ncsetup(fname_rec,[varname],(grid[1],grid[2]),meandata)
 
+    MO = train_init(model,:ADAM)
+
     @time for e = 1:epochs
         #@time @profile for e = 1:epochs
         #Juno.@profile @time  for e = 1:epochs
 
         lr = learning_rate * 0.5^(e / learning_rate_decay_epoch)
 
-        # loop over training datasets
-        for (ii,loss) in enumerate(adam(model, train; gclip = clip_grad, lr = lr))
-            push!(losses,loss)
+        loss_avg = train_epoch!(MO,train,lr;
+                                clip_grad = clip_grad)
 
-            if (ii-1) % 20 == 0
-                println("epoch: $(@sprintf("%5d",e )) loss $(@sprintf("%5.4f",loss)) $lr")
-                flush(stdout)
-            end
-        end
+        push!(losses,loss_avg)
+        println("epoch: $(@sprintf("%5d",e )) loss $(@sprintf("%5.4f",losses[end]))")
+        flush(stdout)
 
         if e ∈ save_epochs
             println("Save output $e")
