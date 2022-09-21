@@ -104,10 +104,10 @@ mse(x,y) = mean((x-y).^2)
 
 (c::Conv)(x) = c.f.(conv4(c.w, x, padding = 1) .+ c.b)
 # deprecated
-Conv(w1::Integer,w2::Integer,cx,cy,f = relu) = Conv(param(w1,w2,cx,cy), param0(1,1,cy,1), f)
+#Conv(w1::Integer,w2::Integer,cx,cy,f = relu) = Conv(param(w1,w2,cx,cy), param0(1,1,cy,1), f)
 
-Conv(w::NTuple{2},cx,cy,f = relu) = Conv(param(w[1],w[2],cx,cy), param0(1,1,cy,1), f)
-Conv(w::NTuple{3},cx,cy,f = relu) = Conv(param(w[1],w[2],w[3],cx,cy), param0(1,1,1,cy,1), f)
+Conv(w::NTuple{2},(cx,cy),f = relu) = Conv(param(w[1],w[2],cx,cy), param0(1,1,cy,1), f)
+Conv(w::NTuple{3},(cx,cy),f = relu) = Conv(param(w[1],w[2],w[3],cx,cy), param0(1,1,1,cy,1), f)
 
 
 # Define transposed convolutional layer:
@@ -171,8 +171,8 @@ end
 export ConvBN
 
 (c::ConvBN)(x) = c.f.(c.bn(conv4(c.w, x, padding = 1) .+ c.b))
-ConvBN(w::NTuple{2},cx,cy,f = relu) = ConvBN(param(w[1],w[2],cx,cy), param0(1,1,cy,1), BatchNorm(cy), f)
-ConvBN(w::NTuple{3},cx,cy,f = relu) = ConvBN(param(w[1],w[2],w[3],cx,cy), param0(1,1,1,cy,1), BatchNorm(cy), f)
+ConvBN(w::NTuple{2},(cx,cy),f = relu) = ConvBN(param(w[1],w[2],cx,cy), param0(1,1,cy,1), BatchNorm(cy), f)
+ConvBN(w::NTuple{3},(cx,cy),f = relu) = ConvBN(param(w[1],w[2],w[3],cx,cy), param0(1,1,1,cy,1), BatchNorm(cy), f)
 
 
 weights(m::Union{Dense,BatchNorm,Conv,ConvBN,ConvTranspose}) = [m.w]
@@ -371,35 +371,35 @@ end
 
 # model = Model(Chain((
 #     CatSkip(Chain((
-#         Conv(3,3,enc_nfilter[1],enc_nfilter[2]),
+#         Conv((3,3),enc_nfilter[1] => enc_nfilter[2],relu),
 #         mypool,
 #         CatSkip(Chain((
-#             Conv(3,3,enc_nfilter[2],enc_nfilter[3]),
+#             Conv((3,3),enc_nfilter[2] => enc_nfilter[3],relu),
 #             mypool,
 #             CatSkip(Chain((
-#                 Conv(3,3,enc_nfilter[3],enc_nfilter[4]),
+#                 Conv((3,3),enc_nfilter[3 => enc_nfilter[4],relu),
 #                 mypool,
 #                 CatSkip(Chain((
-#                     Conv(3,3,enc_nfilter[4],enc_nfilter[5]),
+#                     Conv((3,3),enc_nfilter[4] => enc_nfilter[5],relu),
 #                     mypool,
 #                     #x -> pool(x, mode = 2, padding = (1,0)),
 #                     inner,
 #                     upsample,
 #                     #x -> x[1:end-1,:,:,:],
 #                 ))),
-#                 Conv(3,3,enc_nfilter[5]+enc_nfilter[4],enc_nfilter[4]),
+#                 Conv((3,3),enc_nfilter[5]+enc_nfilter[4] => enc_nfilter[4], relu),
 #                 upsample))),
-#             Conv(3,3,enc_nfilter[4]+enc_nfilter[3],enc_nfilter[3]),
+#             Conv((3,3),enc_nfilter[4]+enc_nfilter[3] => enc_nfilter[3],relu),
 #             upsample))),
-#         Conv(3,3,enc_nfilter[3]+enc_nfilter[2],enc_nfilter[2]),
+#         Conv((3,3),enc_nfilter[3]+enc_nfilter[2] => enc_nfilter[2],relu),
 #         upsample))),
-#     Conv(3,3,enc_nfilter[2]+enc_nfilter[1],2,identity))))
+#     Conv((3,3),enc_nfilter[2]+enc_nfilter[1] => 2,identity))))
 
 
 function recmodel(sz,enc_nfilter,l=1)
     if l+1 == length(enc_nfilter)
         return CatSkip(Chain((
-            Conv((3,3),enc_nfilter[l],enc_nfilter[l+1]),
+            Conv((3,3),enc_nfilter[l] => enc_nfilter[l+1],relu),
                     mypool,
                     #x -> pool(x, mode = 2, padding = (1,0)),
                     inner,
@@ -408,10 +408,10 @@ function recmodel(sz,enc_nfilter,l=1)
                 )))
     else
         return CatSkip(Chain((
-            Conv((3,3),enc_nfilter[l],enc_nfilter[l+1]),
+            Conv((3,3),enc_nfilter[l] => enc_nfilter[l+1]),relu,
             mypool,
             recmodel(sz,enc_nfilter,l+1),
-            Conv((3,3),enc_nfilter[l+2]+enc_nfilter[l+1],enc_nfilter[l+1]),
+            Conv((3,3),enc_nfilter[l+2]+enc_nfilter[l+1] => enc_nfilter[l+1],relu),
             upsample)))
     end
 end
@@ -455,12 +455,12 @@ function recmodel3(sz,enc_nfilter,l=1; method = :nearest)
     if l == length(enc_nfilter)
         return identity
     else
-        return SumSkip( Chain((Conv(convkernel,enc_nfilter[l],enc_nfilter[l+1]),
+        return SumSkip( Chain((Conv(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu),
                                mypool,
                                recmodel3(sz_small,enc_nfilter,l+1, method = method),
                                Upsample(sz_small, enc_nfilter[l+1], method = method),
                                x -> croppadding(x,odd),
-                               Conv(convkernel,enc_nfilter[l+1],enc_nfilter[l],f))))
+                               Conv(convkernel,enc_nfilter[l+1] => enc_nfilter[l],f))))
        #return Conv(convkernel,enc_nfilter[l],enc_nfilter[l+1])
     end
 end
@@ -492,12 +492,12 @@ function recmodel4(sz,enc_nfilter,dec_nfilter,skipconnections,l=1; method = :nea
         return identity
     else
         inner = Chain((
-            Conv(convkernel,enc_nfilter[l],enc_nfilter[l+1]),
+            Conv(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu),
             mypool,
             recmodel4(sz_small,enc_nfilter,dec_nfilter,skipconnections,l+1, method = method),
                        Upsample(sz_small, enc_nfilter[l+1], method = method),
                        x -> croppadding(x,odd),
-                       Conv(convkernel,dec_nfilter[l+1],dec_nfilter[l],f),
+                       Conv(convkernel,dec_nfilter[l+1] => dec_nfilter[l],f),
 #            ConvTranspose(upkernel,dec_nfilter[l+1] => dec_nfilter[l],f,stride=2),
 #            x -> croppadding(x,odd),
         ))
@@ -539,13 +539,13 @@ function recmodel_bn(sz,enc_nfilter,l=1; method = :nearest)
     if l == length(enc_nfilter)
         return identity
     else
-        return SumSkip( Chain((ConvBN(convkernel,enc_nfilter[l],enc_nfilter[l+1]),
+        return SumSkip( Chain((ConvBN(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu),
                                mypool,
                                recmodel_bn(sz_small,enc_nfilter,l+1, method = method),
                                Upsample(sz_small, enc_nfilter[l+1], method = method),
                                x -> croppadding(x,odd),
-                               ConvBN(convkernel,enc_nfilter[l+1],enc_nfilter[l],f))))
-       #return Conv(convkernel,enc_nfilter[l],enc_nfilter[l+1])
+                               ConvBN(convkernel,enc_nfilter[l+1] => enc_nfilter[l],f))))
+       #return Conv(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu)
     end
 end
 
@@ -576,12 +576,12 @@ function recmodel_noskip(sz,enc_nfilter,l=1; method = :nearest)
     if l == length(enc_nfilter)
         return identity
     else
-        return Chain((Conv(convkernel,enc_nfilter[l],enc_nfilter[l+1]),
+        return Chain((Conv(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu),
                       mypool,
                       recmodel_noskip(sz_small,enc_nfilter,l+1; method = method),
                       Upsample(sz_small, enc_nfilter[l+1], method = method),
                       x -> croppadding(x,odd),
-                      Conv(convkernel,enc_nfilter[l+1],enc_nfilter[l],f)))
+                      Conv(convkernel,enc_nfilter[l+1] => enc_nfilter[l],f)))
     end
 end
 
