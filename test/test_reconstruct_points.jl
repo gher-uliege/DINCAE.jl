@@ -1,6 +1,9 @@
+ENV["CUDA_VISIBLE_DEVICES"]=""
+
 using DINCAE
 using NCDatasets
 using Random
+using Test
 
 T = Float32
 filename = "subset-sla-train.nc"
