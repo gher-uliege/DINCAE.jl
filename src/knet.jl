@@ -97,8 +97,6 @@ export Conv
 mse(x,y) = mean((x-y).^2)
 
 (c::Conv)(x) = c.f.(conv4(c.w, x, padding = 1) .+ c.b)
-# deprecated
-#Conv(w1::Integer,w2::Integer,cx,cy,f = relu) = Conv(param(w1,w2,cx,cy), param0(1,1,cy,1), f)
 
 Conv(w::NTuple{2},(cx,cy),f = relu) = Conv(param(w[1],w[2],cx,cy), param0(1,1,cy,1), f)
 Conv(w::NTuple{3},(cx,cy),f = relu) = Conv(param(w[1],w[2],w[3],cx,cy), param0(1,1,1,cy,1), f)

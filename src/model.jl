@@ -193,66 +193,10 @@ end
     return loss
 end
 
-
-# mode=0: 0 for max, 1 for average including padded values, 2 for average excluding padded values.
-#const pool_mode = 0; # max pooling
-const pool_mode = 1; # average pooling
-
-const mypool(x) = pool(x; mode = pool_mode)
-
 function showsize(x)
     @show size(x)
     return x
 end
-
-# model = Model(Chain(
-#     CatSkip(Chain(
-#         Conv((3,3),enc_nfilter[1] => enc_nfilter[2],relu),
-#         mypool,
-#         CatSkip(Chain(
-#             Conv((3,3),enc_nfilter[2] => enc_nfilter[3],relu),
-#             mypool,
-#             CatSkip(Chain(
-#                 Conv((3,3),enc_nfilter[3 => enc_nfilter[4],relu),
-#                 mypool,
-#                 CatSkip(Chain(
-#                     Conv((3,3),enc_nfilter[4] => enc_nfilter[5],relu),
-#                     mypool,
-#                     #x -> pool(x, mode = 2, padding = (1,0)),
-#                     inner,
-#                     upsample,
-#                     #x -> x[1:end-1,:,:,:],
-#                 )),
-#                 Conv((3,3),enc_nfilter[5]+enc_nfilter[4] => enc_nfilter[4], relu),
-#                 upsample)),
-#             Conv((3,3),enc_nfilter[4]+enc_nfilter[3] => enc_nfilter[3],relu),
-#             upsample)),
-#         Conv((3,3),enc_nfilter[3]+enc_nfilter[2] => enc_nfilter[2],relu),
-#         upsample)),
-#     Conv((3,3),enc_nfilter[2]+enc_nfilter[1] => 2,identity)))
-
-
-function recmodel(sz,enc_nfilter,l=1)
-    if l+1 == length(enc_nfilter)
-        return CatSkip(Chain(
-            Conv((3,3),enc_nfilter[l] => enc_nfilter[l+1],relu),
-                    mypool,
-                    #x -> pool(x, mode = 2, padding = (1,0)),
-                    inner,
-                    upsample,
-                    #x -> x[1:end-1,:,:,:],
-                ))
-    else
-        return CatSkip(Chain(
-            Conv((3,3),enc_nfilter[l] => enc_nfilter[l+1]),relu,
-            mypool,
-            recmodel(sz,enc_nfilter,l+1),
-            Conv((3,3),enc_nfilter[l+2]+enc_nfilter[l+1] => enc_nfilter[l+1],relu),
-            upsample))
-    end
-end
-
-
 
 # remove padding from x
 function croppadding(x,odd)
@@ -263,40 +207,6 @@ end
 function croppadding2(x,odd)
     r = ntuple(i -> ((odd[i]==1) ? (1:size(x,i)-1) : (2:size(x,i)-1) ), length(odd))
     return x[r...,:,:]
-end
-
-function recmodel3(sz,enc_nfilter,l=1; method = :nearest)
-    # for 2D
-    # convkernel = (3,3)
-    # upkernel = (2,2)
-
-    convkernel = ntuple(i -> 3, length(sz))
-    upkernel = ntuple(i -> 2, length(sz))
-
-    # activation function
-    f =
-        if l == 1
-            identity
-        else
-            relu
-        end
-
-    odd = map(x -> x % 2,sz)
-
-    # size after pooling
-    sz_small = sz.÷2 .+ odd
-
-    if l == length(enc_nfilter)
-        return identity
-    else
-        return SumSkip( Chain(Conv(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu),
-                               MeanPool((2,2),pad = odd),
-                               recmodel3(sz_small,enc_nfilter,l+1, method = method),
-                               Upsample(sz_small, enc_nfilter[l+1], method = method),
-                               x -> croppadding(x,odd),
-                               Conv(convkernel,enc_nfilter[l+1] => enc_nfilter[l],f)))
-       #return Conv(convkernel,enc_nfilter[l],enc_nfilter[l+1])
-    end
 end
 
 function recmodel4(sz,enc_nfilter,dec_nfilter,skipconnections,l=1; method = :nearest)
@@ -345,77 +255,6 @@ end
 
 
 
-function recmodel_bn(sz,enc_nfilter,l=1; method = :nearest)
-    # for 2D
-    # convkernel = (3,3)
-    # upkernel = (2,2)
-
-    convkernel = ntuple(i -> 3, length(sz))
-    upkernel = ntuple(i -> 2, length(sz))
-
-    # activation function
-    f =
-        if l == 1
-            identity
-        else
-            relu
-        end
-
-    odd = map(x -> x % 2,sz)
-    pool_mode = 1; # average pooling
-    mypool(x) = pool(x; mode = pool_mode, padding = odd)
-
-    # size after pooling
-    sz_small = sz.÷2 .+ odd
-
-    if l == length(enc_nfilter)
-        return identity
-    else
-        return SumSkip( Chain(ConvBN(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu),
-                               mypool,
-                               recmodel_bn(sz_small,enc_nfilter,l+1, method = method),
-                               Upsample(sz_small, enc_nfilter[l+1], method = method),
-                               x -> croppadding(x,odd),
-                               ConvBN(convkernel,enc_nfilter[l+1] => enc_nfilter[l],f)))
-       #return Conv(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu)
-    end
-end
-
-
-function recmodel_noskip(sz,enc_nfilter,l=1; method = :nearest)
-    # for 2D
-    # convkernel = (3,3)
-    # upkernel = (2,2)
-
-    convkernel = ntuple(i -> 3, length(sz))
-    upkernel = ntuple(i -> 2, length(sz))
-
-    # activation function
-    f =
-        if l == 1
-            identity
-        else
-            relu
-        end
-
-    odd = map(x -> x % 2,sz)
-    pool_mode = 1; # average pooling
-    mypool(x) = pool(x; mode = pool_mode, padding = odd)
-
-    # size after pooling
-    sz_small = sz.÷2 .+ odd
-
-    if l == length(enc_nfilter)
-        return identity
-    else
-        return Chain(Conv(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu),
-                     mypool,
-                     recmodel_noskip(sz_small,enc_nfilter,l+1; method = method),
-                     Upsample(sz_small, enc_nfilter[l+1], method = method),
-                     x -> croppadding(x,odd),
-                     Conv(convkernel,enc_nfilter[l+1] => enc_nfilter[l],f))
-    end
-end
 
 """
     reconstruct(Atype,data_all,fnames_rec;...)
