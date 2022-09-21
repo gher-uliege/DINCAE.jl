@@ -1,5 +1,5 @@
 # upsampling
-struct Upsample{TA,N}
+struct _Upsample{TA,N}
     w::TA
     padding::NTuple{N,Int}
 end
@@ -9,7 +9,7 @@ struct SkipConnection
     connection
 end
 
-function Upsample(sz::Tuple, nvar; atype = Knet.atype(), method = :nearest)
+function _Upsample(sz::Tuple, nvar; atype = Knet.atype(), method = :nearest)
     N = length(sz)
     #nvar = sz[N+1]
     #ksize = (2,2,2)
@@ -33,9 +33,9 @@ function Upsample(sz::Tuple, nvar; atype = Knet.atype(), method = :nearest)
     end
 
     padding = ntuple(i -> 0, N)
-    return Upsample(w,padding)
+    return _Upsample(w,padding)
 end
-function (m::Upsample)(x)
+function (m::_Upsample)(x)
     y = Knet.deconv4(m.w,x,stride=2,padding = m.padding)
     if size(m.w,2) == 2
         # nearest
@@ -46,7 +46,7 @@ function (m::Upsample)(x)
     end
 end
 
-weights(m::Union{Function,Upsample}) = []
+weights(m::Union{Function,_Upsample}) = []
 
 function upsample(x)
     N = ndims(x)
@@ -79,12 +79,15 @@ struct Dense
     w
     b
     f
-    dropout_rate_train
 end
 
-(d::Dense)(x) = dropout(d.f.(d.w * mat(x) .+ d.b),d.dropout_rate_train)
-Dense(i::Int,nout::Int,dropout_rate_train::AbstractFloat,f=relu) = Dense(param(nout,i), param0(nout), f, dropout_rate_train)
+(d::Dense)(x) = d.f.(d.w * mat(x) .+ d.b)
+Dense(inout::Pair{<:Integer},f=identity) = Dense(param(inout[2],inout[1]), param0(inout[2]), f)
 export Dense
+
+function Dropout(dropout_rate_train::AbstractFloat)
+    return x -> dropout(x,d.dropout_rate_train)
+end
 
 # Define convolutional layer:
 struct Conv
@@ -188,4 +191,27 @@ function MeanPool(window::NTuple; pad = 0)
     end
 
     return x -> pool(x; mode = 1, padding = pad)
+end
+
+function train_init(model,optim)
+    @assert optim == :ADAM
+    return (model,adam)
+end
+
+function train_epoch!((model,optim),dl,learning_rate; clip_grad = nothing)
+    N = 0
+    loss_sum = 0
+    # loop over training datasets
+    for (ii,loss) in enumerate(optim(model, dl; gclip = clip_grad, lr = learning_rate))
+        #for (ii,loss) in enumerate(optim(model, train; gclip = clip_grad, lr = learning_rate))
+        loss_sum += loss
+        N += 1
+    end
+
+    #for (ii,loss) in enumerate(train)
+    #    loss_sum += sum(sum.(loss))
+    #    N += 1
+    #end
+
+    return loss_sum/N
 end

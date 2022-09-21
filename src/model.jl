@@ -237,7 +237,7 @@ function recmodel4(sz,enc_nfilter,dec_nfilter,skipconnections,l=1; method = :nea
             Conv(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu),
             MeanPool((2,2),pad = odd),
             recmodel4(sz_small,enc_nfilter,dec_nfilter,skipconnections,l+1, method = method),
-                       Upsample(sz_small, enc_nfilter[l+1], method = method),
+                       _Upsample(sz_small, enc_nfilter[l+1], method = method),
                        x -> croppadding(x,odd),
                        Conv(convkernel,dec_nfilter[l+1] => dec_nfilter[l],f),
 #            ConvTranspose(upkernel,dec_nfilter[l+1] => dec_nfilter[l],f,stride=2),
@@ -461,26 +461,17 @@ function reconstruct(Atype,data_all,fnames_rec;
     )
           for fname_rec in fnames_rec]
 
+    MO = train_init(model,:ADAM)
+
     # loop over epochs
     @time for e = 1:epochs
     #Juno.@profile @time  for e = 1:epochs
-
         lr = learning_rate * 0.5^(e / learning_rate_decay_epoch)
 
-        N = 0
-        loss_sum = 0
-        # loop over training datasets
-        for (ii,loss) in enumerate(adam(model, DINCAE.PrefetchDataIter(train); gclip = clip_grad, lr = lr))
-        #for (ii,loss) in enumerate(adam(model, train; gclip = clip_grad, lr = lr))
-            loss_sum += loss
-            N += 1
-        end
+        loss_avg = train_epoch!(MO,DINCAE.PrefetchDataIter(train),lr;
+                                clip_grad = clip_grad)
 
-        #for (ii,loss) in enumerate(train)
-        #    loss_sum += sum(sum.(loss))
-        #    N += 1
-        #end
-        push!(losses,loss_sum/N)
+        push!(losses,loss_avg)
         println("epoch: $(@sprintf("%5d",e )) loss $(@sprintf("%5.4f",losses[end]))")
         flush(stdout)
 
