@@ -45,6 +45,7 @@ import Random: shuffle!
 
 include("types.jl")
 include("data.jl")
+include("knet.jl")
 include("model.jl")
 include("points.jl")
 include("vector2.jl")
