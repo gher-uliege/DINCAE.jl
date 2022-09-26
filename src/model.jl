@@ -328,7 +328,6 @@ function reconstruct(Atype,data_all,fnames_rec;
     end
 
     varname = data_all[1][1].varname
-    output_ndims == 2
 
     @info "Number of threads: $(Threads.nthreads())"
 
