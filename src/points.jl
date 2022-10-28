@@ -380,7 +380,7 @@ function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth
     #xrec
 
     ibatch = 1
-
+#=
     #xrec_interp = Vector{Atype{2}}(undef,batch_size)
     xrec_interp = Vector{Any}(undef,batch_size)
 
@@ -409,6 +409,11 @@ function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth
             hcat(interpnd(xtrue[ibatch].pos,xrec[:,:,1,ibatch]),
                  interpnd(xtrue[ibatch].pos,xrec[:,:,2,ibatch]))
     end
+=#
+    xrec_interp = [
+            hcat(interpnd(xtrue[ibatch].pos,xrec[:,:,1,ibatch]),
+                 interpnd(xtrue[ibatch].pos,xrec[:,:,2,ibatch]))
+            for ibatch = 1:batch_size]
 
     xrec_interp2 = reduce(vcat,xrec_interp)
 
