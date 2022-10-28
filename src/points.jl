@@ -24,13 +24,13 @@ function interpnd!(pos::AbstractVector{<:NTuple{N}},A,vec) where N
     #return vec
     return nothing
 end
-
+#=
 function interpnd!(pos::AbstractVector{<:NTuple{N}},A::KnetArray,vec) where N
     cuA = CuArray(A)
     cuvec = CuArray(vec)
     @cuda DINCAE.interpnd!(pos,cuA,cuvec)
 end
-
+=#
 function interpnd!(pos::AbstractVector{<:NTuple{N}},cuA::CuArray,cuvec) where N
     @cuda DINCAE.interpnd!(pos,cuA,cuvec)
 end
@@ -47,6 +47,9 @@ end
 
 
 #Knet.AutoGrad.@primitive interpnd(pos,A),dy,y 0 interp_adjn(pos,dy,size(A))
+
+Flux.Zygote.@adjoint interpnd(pos,A) = interpnd(pos,A), dy -> (
+    fill(ntuple(i -> 0,length(pos[1])),length(pos)),interp_adjn(pos,dy,size(A)))
 
 """
         all positions should be within the domain. exclusive upper bound
@@ -77,12 +80,13 @@ function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
     return nothing
 end
 
-
+#=
 function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values::KnetArray,A2) where N
     cuvalues = CuArray(values)
     cuA2 = CuArray(A2)
     @cuda interp_adjn!(pos,cuvalues,cuA2)
 end
+=#
 
 function interp_adjn!(pos::AbstractVector{<:NTuple{N}},cuvalues::CuArray,cuA2) where N
     @cuda interp_adjn!(pos,cuvalues,cuA2)
@@ -369,7 +373,7 @@ function DINCAE.sizex(d::PointCloud)
     return (sz[1],sz[2],nvar)
 end
 
-function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth_uncertain) where TA <: Union{Array{T,N},KnetArray{T,N}} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
+function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth_uncertain) where TA <: Union{Array{T,N},CuArray{T,N}#=,KnetArray{T,N}=#} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
 
     #@show typeof(xin)
     #@show typeof(xrec)
@@ -588,11 +592,14 @@ function reconstruct_points(
         regularization_L2 = regularization_L2_beta,
     )
 
+    device = _to_device(Atype)
+
+    model = model |> device
+
     #=
     i = 5
     scatter(lon[i],lat[i],1,sla[i])
     =#
-
 
     xin,xtrue = first(train)
 
@@ -601,7 +608,8 @@ function reconstruct_points(
     @show size(model(xin))
     @show sz
     # test loss function
-    @show model(xin,xtrue)
+    #@show model(xin,xtrue)
+    @show loss_function(model,xin,xtrue)
 
     losses = []
 

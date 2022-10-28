@@ -51,6 +51,6 @@ include("flux.jl")
 include("types.jl")
 include("data.jl")
 include("model.jl")
-#include("points.jl")
+include("points.jl")
 include("vector2.jl")
 end

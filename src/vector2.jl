@@ -75,7 +75,6 @@ function vector2_costfun(xrec,xtrue,truth_uncertain,directionobs)
 
     #@show size(xrec)
     P11,P12,P22 = vector2_covariance(xrec; obsoper = obsoper)
-
     # u/v at observations location
     uv_obs = vector2_mean(xrec,(P11,P12,P22); obsoper = obsoper)
 

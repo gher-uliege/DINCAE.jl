@@ -445,8 +445,9 @@ function reconstruct(Atype,data_all,fnames_rec;
         )
     end
 
+    device = _to_device(Atype)
 
-    model = model |> Flux.gpu
+    model = model |> device
 
     xrec = model(Atype(inputs_))
     @info "Output size:       $(format_size(size(xrec)))"

@@ -218,3 +218,11 @@ function train_epoch!((model,optim),dl,learning_rate; clip_grad = nothing)
 
     return loss_sum/N
 end
+
+@inline function _to_device(::Type{Atype}) where Atype <: Union{KnetArray,CuArray}
+    return x -> cu(x)
+end
+
+@inline function _to_device(::Type{Atype}) where Atype <: AbstractArray
+    return identity
+end
