@@ -6,7 +6,7 @@
 
 [![Issues](https://img.shields.io/github/issues-raw/gher-uliege/DINCAE.jl?style=plastic)](https://github.com/gher-uliege/DINCAE.jl/issues)
 ![Issues](https://img.shields.io/github/commit-activity/m/gher-uliege/DINCAE.jl)
-![Commit](https://img.shields.io/github/last-commit/gher-uliege/DINCAE.jl)
+![Commit](https://img.shields.io/github/last-commit/gher-uliege/DINCAE.jl) ![GitHub top language](https://img.shields.io/github/languages/top/gher-uliege/DINCAE.jl)
 
 # DINCAE.jl
 
