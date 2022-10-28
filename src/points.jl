@@ -330,17 +330,8 @@ function getxy!(d::PointCloud{Atype,T,N},ind,xin,xtrue) where {Atype,T,N}
     return (xin,xtrue)
 end
 
-
-function _to_device(::Type{Atype},pos) where Atype <: Union{KnetArray,CuArray}
-    return cu(pos)
-end
-
-function _to_device(::Type{Atype},pos) where Atype
-    return pos
-end
-
-
 function Base.iterate(d::PointCloud{Atype,T,N},index = 0) where {Atype,T,N}
+    device = _to_device(Atype)
 
     sz = sizex(d)
     ntime = length(d.x)
@@ -364,7 +355,7 @@ function Base.iterate(d::PointCloud{Atype,T,N},index = 0) where {Atype,T,N}
     #@show index
     return ((Atype(xin),
              #map(xt -> (pos = xt.pos, x = Atype(xt.x)),xtrue)),bs[end])
-             map(xt -> (pos = _to_device(Atype,xt.pos), x = Atype(xt.x)),xtrue)),bs[end])
+             map(xt -> (pos = device(xt.pos), x = Atype(xt.x)),xtrue)),bs[end])
              #map(xt -> (pos = cu(xt.pos), x = Atype(xt.x)),xtrue)),bs[end])
 
 end
