@@ -1,3 +1,5 @@
+using Knet
+
 # upsampling
 struct _Upsample{TA,N}
     w::TA
@@ -94,15 +96,16 @@ struct Conv
     w
     b
     f
+    pad
 end
 export Conv
 
 mse(x,y) = mean((x-y).^2)
 
-(c::Conv)(x) = c.f.(conv4(c.w, x, padding = 1) .+ c.b)
+(c::Conv)(x) = c.f.(conv4(c.w, x, padding = c.pad) .+ c.b)
 
-Conv(w::NTuple{2},(cx,cy),f = relu) = Conv(param(w[1],w[2],cx,cy), param0(1,1,cy,1), f)
-Conv(w::NTuple{3},(cx,cy),f = relu) = Conv(param(w[1],w[2],w[3],cx,cy), param0(1,1,1,cy,1), f)
+Conv(w::NTuple{2},(cx,cy),f = relu; pad=0) = Conv(param(w[1],w[2],cx,cy), param0(1,1,cy,1), f, pad)
+Conv(w::NTuple{3},(cx,cy),f = relu; pad=0) = Conv(param(w[1],w[2],w[3],cx,cy), param0(1,1,1,cy,1), f, pad)
 
 
 # Define transposed convolutional layer:
@@ -193,7 +196,7 @@ function MeanPool(window::NTuple; pad = 0)
     return x -> pool(x; mode = 1, padding = pad)
 end
 
-function train_init(model,optim)
+function train_init(model,optim; clip_grad = nothing, learning_rate = nothing)
     @assert optim == :ADAM
     return (model,adam)
 end

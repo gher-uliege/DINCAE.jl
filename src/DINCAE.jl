@@ -35,7 +35,6 @@ using Random
 using NCDatasets
 using Printf
 using Statistics
-using Knet
 using ThreadsX
 
 import Base: length
@@ -43,10 +42,15 @@ import Base: size
 import Base: getindex
 import Random: shuffle!
 
+using Profile
+#import Knet: KnetArray, AutoGrad
+#import Knet
+
+#include("knet.jl")
+include("flux.jl")
 include("types.jl")
 include("data.jl")
-include("knet.jl")
 include("model.jl")
-include("points.jl")
+#include("points.jl")
 include("vector2.jl")
 end

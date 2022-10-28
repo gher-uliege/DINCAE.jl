@@ -66,7 +66,8 @@ function vector2_costfun(xrec,xtrue,truth_uncertain,directionobs)
         # https://github.com/denizyuret/Knet.jl/issues/635
         #tmp[:,:,ones(Int,nsites),:]
         #cat(tmp,tmp,tmp,dims=3)
-        cat((tmp for i = 1:nsites)...,dims=3)
+        #cat((tmp for i = 1:nsites)...,dims=3)
+        cat([tmp for i = 1:nsites]...,dims=3)
     end
 
     N = ndims(xtrue)

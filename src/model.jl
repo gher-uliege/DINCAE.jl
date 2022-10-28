@@ -44,7 +44,10 @@ function transform_mσ2(x,gamma)
 end
 
 function costfun_single(m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,truth_uncertain)
-    n_noncloud = sum(mask_noncloud)
+    #return sum(m_rec)
+    #n_noncloud = sum(mask_noncloud)
+    n_noncloud = Flux.Zygote.dropgrad(sum(mask_noncloud))
+    #n_noncloud = 100
     # if n_noncloud == 0
     #     @show n_noncloud
     #     error("no data")
@@ -163,7 +166,9 @@ function (model::StepModel)(xin)
     return model.final_layer(xout)
 end
 
- function (model::StepModel)(xin,xtrue)
+#function (model::StepModel)(xin,xtrue)
+function loss_function(model::StepModel,xin,xtrue)
+#    loss = sum(model(xin))
     N = ndims(xin)
     noutput = size(xtrue,N-1) ÷ 2
     xout = model.chains[1](xin)
@@ -190,8 +195,11 @@ end
             loss += model.regularization_L2 * sum(abs2,w)
         end
     end
+
     return loss
 end
+
+Flux.@functor StepModel
 
 function showsize(x)
     @show size(x)
@@ -234,12 +242,12 @@ function recmodel4(sz,enc_nfilter,dec_nfilter,skipconnections,l=1; method = :nea
         return identity
     else
         inner = Chain(
-            Conv(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu),
-            MeanPool((2,2),pad = odd),
+            Conv(convkernel,enc_nfilter[l] => enc_nfilter[l+1],relu, pad = 1),
+            MeanPool(upkernel,pad = odd),
             recmodel4(sz_small,enc_nfilter,dec_nfilter,skipconnections,l+1, method = method),
-                       _Upsample(sz_small, enc_nfilter[l+1], method = method),
-                       x -> croppadding(x,odd),
-                       Conv(convkernel,dec_nfilter[l+1] => dec_nfilter[l],f),
+            _Upsample(sz_small, enc_nfilter[l+1], method = method),
+            x -> croppadding(x,odd),
+            Conv(convkernel,dec_nfilter[l+1] => dec_nfilter[l],f, pad = 1),
 #            ConvTranspose(upkernel,dec_nfilter[l+1] => dec_nfilter[l],f,stride=2),
 #            x -> croppadding(x,odd),
         )
@@ -437,12 +445,16 @@ function reconstruct(Atype,data_all,fnames_rec;
         )
     end
 
+
+    model = model |> Flux.gpu
+
     xrec = model(Atype(inputs_))
     @info "Output size:       $(format_size(size(xrec)))"
     @info "Output range:      $(extrema(Array(xrec)))"
     @info "Output sum:        $(sum(xrec))"
 
-    loss = model(Atype(inputs_), Atype(xtrue))
+    #loss = model(Atype(inputs_), Atype(xtrue))
+    loss = loss_function(model,Atype(inputs_), Atype(xtrue))
     @info "Initial loss:      $loss"
 
     losses = typeof(loss)[]
@@ -460,7 +472,7 @@ function reconstruct(Atype,data_all,fnames_rec;
     )
           for fname_rec in fnames_rec]
 
-    MO = train_init(model,:ADAM)
+    MO = train_init(model,:ADAM; clip_grad = clip_grad, learning_rate = learning_rate)
 
     # loop over epochs
     @time for e = 1:epochs

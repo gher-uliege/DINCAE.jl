@@ -46,7 +46,7 @@ end
 
 
 
-Knet.AutoGrad.@primitive interpnd(pos,A),dy,y 0 interp_adjn(pos,dy,size(A))
+#Knet.AutoGrad.@primitive interpnd(pos,A),dy,y 0 interp_adjn(pos,dy,size(A))
 
 """
         all positions should be within the domain. exclusive upper bound
@@ -617,7 +617,7 @@ function reconstruct_points(
     meandata = zeros(sz[1:2]);
     ds = ncsetup(fname_rec,[varname],(grid[1],grid[2]),meandata)
 
-    MO = train_init(model,:ADAM)
+    MO = train_init(model,:ADAM; clip_grad = clip_grad, learning_rate = learning_rate)
 
     @time for e = 1:epochs
         #@time @profile for e = 1:epochs
