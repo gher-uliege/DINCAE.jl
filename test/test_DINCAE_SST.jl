@@ -6,9 +6,15 @@ using DINCAE
 using Base.Iterators
 using Random
 using NCDatasets
+using CUDA
 
 const F = Float32
-Atype = Array{F}
+Atype =
+    if CUDA.functional()
+        CuArray{F}
+    else
+        Array{F}
+    end
 
 Random.seed!(123)
 
@@ -51,7 +57,7 @@ for (upsampling_method,is3D,truth_uncertain,loss_weights_refine) = (
     (:nearest, false,false, (0.3,0.7)),
 )
 
-    fnames_rec = [tempname()]
+    local fnames_rec = [tempname()]
     paramfile = tempname()
 
     losses = DINCAE.reconstruct(
