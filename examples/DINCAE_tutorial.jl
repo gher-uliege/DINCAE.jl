@@ -82,20 +82,27 @@ mkpath(outdir)
 # for `#fillmismatch` the suffix)
 # The downloading can take several minutes.
 
-url = "https://thredds.jpl.nasa.gov/thredds/dodsC/ncml_aggregation/OceanTemperature/modis/terra/11um/4km/aggregate__MODIS_TERRA_L3_SST_THERMAL_DAILY_4KM_DAYTIME_V2019.0.ncml#fillmismatch"
-ds = NCDataset(url)
-# find indices withing the longitude, latitude and time range
-i = findall(lon_range[1] .<= ds["lon"][:] .<= lon_range[end]);
-j = findall(lat_range[1] .<= ds["lat"][:] .<= lat_range[end]);
-n = findall(time_range[1] .<= ds["time"][:] .<= time_range[end]);
-# Write subset to disk
-write(fname_subset,ds,idimensions = Dict(
-   "lon" => i,
-   "lat" => j,
-   "time" => n))
-close(ds)
-@info "NetCDF subset ($(length(n)) slices) written $fname_subset"
+#  `Error { code = 500; message = "Java heap space"; }`
 
+if !isfile(fname_subset)
+    download("https://dox.ulg.ac.be/index.php/s/ckHBdhDzAKERwPb/download",fname_subset)
+end
+
+# ```julia
+# url = "https://thredds.jpl.nasa.gov/thredds/dodsC/ncml_aggregation/OceanTemperature/modis/terra/11um/4km/aggregate__MODIS_TERRA_L3_SST_THERMAL_DAILY_4KM_DAYTIME_V2019.0.ncml#fillmismatch"
+# ds = NCDataset(url)
+# # find indices withing the longitude, latitude and time range
+# i = findall(lon_range[1] .<= ds["lon"][:] .<= lon_range[end]);
+# j = findall(lat_range[1] .<= ds["lat"][:] .<= lat_range[end]);
+# n = findall(time_range[1] .<= ds["time"][:] .<= time_range[end]);
+# # Write subset to disk
+# write(fname_subset,ds,idimensions = Dict(
+#    "lon" => i,
+#    "lat" => j,
+#    "time" => n))
+# close(ds)
+# @info "NetCDF subset ($(length(n)) slices) written $fname_subset"
+# ```
 
 # ## Data preparation
 #
@@ -235,3 +242,4 @@ DINCAE_utils.plotres(case,fnameavg, clim = nothing, figdir = figdir,
 # Panel (a) is the original data where we have added clouds (panel (b)). The
 # reconstuction based on the data in panel (b) is shown in panel (c) together
 # with its expected standard deviation error (panel (d)).
+
