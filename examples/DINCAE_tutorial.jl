@@ -5,7 +5,7 @@
 # following articles:
 #
 # * Barth, A., Alvera-Azcárate, A., Licer, M., and Beckers, J.-M.: DINCAE 1.0: a convolutional neural network with error estimates to reconstruct sea surface temperature satellite observations, Geosci. Model Dev., 13, 1609–1622, https://doi.org/10.5194/gmd-13-1609-2020, 2020.
-# * Barth, A., Alvera-Azcárate, A., Troupin, C., and Beckers, J.-M.: DINCAE 2: multivariate convolutional neural network with error estimates to reconstruct sea surface temperature satellite and altimetry observations, Geosci. Model Dev. Discuss. [preprint], https://doi.org/10.5194/gmd-2021-353, in review, 2021.
+# * Barth, A., Alvera-Azcárate, A., Troupin, C., & Beckers, J.-M. (2022). DINCAE 2.0: multivariate convolutional neural network with error estimates to reconstruct sea surface temperature satellite and altimetry observations. Geoscientific Model Development, 15(5), 2183–2196. https://doi.org/10.5194/gmd-15-2183-2022
 #
 # The example here uses MODIS sea surface temperature from the Physical
 # Oceanography Distributed Active Archive Center (PO.DAAC) JPL, NASA.
@@ -28,15 +28,10 @@
 #
 # ```julia
 # using Pkg
-# Pkg.add("CUDA","Knet","NCDatasets","PyPlot")
+# Pkg.add(["CUDA","Knet","NCDatasets","PyPlot"])
 # ```
 #
 # See also https://github.com/gher-ulg/DINCAE.jl#installation
-#
-# If you use Windows, it is necessary to create a `.dodsrc` file as explained
-# here:
-# * https://alexander-barth.github.io/NCDatasets.jl/latest/issues/#OPeNDAP-on-Windows-fails-with-Assertion-failed:-ocpanic
-# * https://github.com/Unidata/netcdf-c/issues/2380
 #
 # Load the necessary modules
 
@@ -87,20 +82,27 @@ mkpath(outdir)
 # for `#fillmismatch` the suffix)
 # The downloading can take several minutes.
 
-url = "https://thredds.jpl.nasa.gov/thredds/dodsC/ncml_aggregation/OceanTemperature/modis/terra/11um/4km/aggregate__MODIS_TERRA_L3_SST_THERMAL_DAILY_4KM_DAYTIME_V2019.0.ncml#fillmismatch"
-ds = NCDataset(url)
-# find indices withing the longitude, latitude and time range
-i = findall(lon_range[1] .<= ds["lon"][:] .<= lon_range[end]);
-j = findall(lat_range[1] .<= ds["lat"][:] .<= lat_range[end]);
-n = findall(time_range[1] .<= ds["time"][:] .<= time_range[end]);
-# Write subset to disk
-write(fname_subset,ds,idimensions = Dict(
-   "lon" => i,
-   "lat" => j,
-   "time" => n))
-close(ds)
-@info "NetCDF subset ($(length(n)) slices) written $fname_subset"
+#  `Error { code = 500; message = "Java heap space"; }`
 
+if !isfile(fname_subset)
+    download("https://dox.ulg.ac.be/index.php/s/ckHBdhDzAKERwPb/download",fname_subset)
+end
+
+# ```julia
+# url = "https://thredds.jpl.nasa.gov/thredds/dodsC/ncml_aggregation/OceanTemperature/modis/terra/11um/4km/aggregate__MODIS_TERRA_L3_SST_THERMAL_DAILY_4KM_DAYTIME_V2019.0.ncml#fillmismatch"
+# ds = NCDataset(url)
+# # find indices withing the longitude, latitude and time range
+# i = findall(lon_range[1] .<= ds["lon"][:] .<= lon_range[end]);
+# j = findall(lat_range[1] .<= ds["lat"][:] .<= lat_range[end]);
+# n = findall(time_range[1] .<= ds["time"][:] .<= time_range[end]);
+# # Write subset to disk
+# write(fname_subset,ds,idimensions = Dict(
+#    "lon" => i,
+#    "lat" => j,
+#    "time" => n))
+# close(ds)
+# @info "NetCDF subset ($(length(n)) slices) written $fname_subset"
+# ```
 
 # ## Data preparation
 #
@@ -240,3 +242,4 @@ DINCAE_utils.plotres(case,fnameavg, clim = nothing, figdir = figdir,
 # Panel (a) is the original data where we have added clouds (panel (b)). The
 # reconstuction based on the data in panel (b) is shown in panel (c) together
 # with its expected standard deviation error (panel (d)).
+
