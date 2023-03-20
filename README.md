@@ -11,7 +11,7 @@
 # DINCAE.jl
 
 DINCAE (Data-Interpolating Convolutional Auto-Encoder) is a neural network to reconstruct missing data in satellite observations.
-This repository contains the julia port of DINCAE. The original [python code](https://github.com/gher-uliege/DINCAE) is no longer maintained.
+This repository contains the Julia port of DINCAE. The original [Python code](https://github.com/gher-uliege/DINCAE) is no longer maintained.
 
 Utilities (for plotting and data preparation) are available in a separate repository
 https://github.com/gher-uliege/DINCAE_utils.jl
@@ -32,14 +32,14 @@ DINCAE is indented to be used with a [GPU](https://en.wikipedia.org/wiki/Graphic
 ## Installation
 
 You need [Julia](https://julialang.org/downloads) (version 1.7 or later) to run `DINCAE`. The command line interface of Julia is sufficient for `DINCAE`.
-If you are using Linux (on a x86_64 CPU), installing and running Julia 1.8.3 is as easy as running these shell commands:
+If you are using Linux (on a x86_64 CPU), installing and running Julia 1.8.5 is as easy as running these shell commands:
 
 ```bash
-curl https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.3-linux-x86_64.tar.gz | tar -xzf -
-julia-1.8.3/bin/julia
+curl https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.5-linux-x86_64.tar.gz | tar -xzf -
+julia-1.8.5/bin/julia
 ```
 
-This installs Julia in the current directory under the folder `julia-1.8.3`.
+This installs Julia in the current directory under the folder `julia-1.8.5`.
 For more information and other platforms, please see [platform specific instructions](https://julialang.org/downloads/platform/) for further installation instructions.
 You can check the latest available version of Julia at https://julialang.org/downloads but avoid beta releases and release candidates if you are new to Julia.
 

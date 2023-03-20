@@ -572,7 +572,7 @@ function reconstruct_points(
     sz = DINCAE.sizex(train)
 
     nvar = sz[3]
-    @info "number of variaiables: $nvar"
+    @info "number of variables: $nvar"
     gamma = log(min_std_err^(-2))
     @info "gamma: $gamma"
 

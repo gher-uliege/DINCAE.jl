@@ -6,7 +6,7 @@ format_size(sz) = join(string.(sz),"×")
 
 Load the variable `varname` from the NetCDF file `fname`. The variable `lon` is
 the longitude in degrees east, `lat` is the latitude in degrees North, `time` is
-a numpy datetime vector, `data_full` is a 3-d array with the data, `missingmask` is a boolean mask where true means the data is missing and `mask` is a boolean mask
+a DateTime vector, `data_full` is a 3-d array with the data, `missingmask` is a boolean mask where true means the data is missing and `mask` is a boolean mask
 where true means the data location is valid, e.g. sea points for sea surface temperature.
 
 At the bare-minimum a NetCDF file should have the following variables and
@@ -186,7 +186,7 @@ export sizey
 Return a structure holding the data for training (`train = true`) or testing (`train = false`)
 the neural network. `obs_err_std` is the error standard deviation of the
 observations. The variable `lon` is the longitude in degrees east, `lat` is the
-latitude in degrees North, `time` is a numpy datetime vector, `data_full` is a
+latitude in degrees north, `time` is a DateTime vector, `data_full` is a
 3-d array with the data and `missingmask` is a boolean mask where true means the data is
 missing. `jitter_std` is the standard deviation of the noise to be added to the
 data during training.
