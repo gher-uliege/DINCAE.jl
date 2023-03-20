@@ -622,7 +622,7 @@ end
 
 Train a neural network to reconstruct missing data using the training data set
 and periodically run the neural network on the test dataset. The data is assumed to be
-avaialable on a regular longitude/latitude grid (which is the case of L3
+available on a regular longitude/latitude grid (which is the case of L3
 satellite data).
 
 ## Mandatory parameters

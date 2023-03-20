@@ -7,7 +7,7 @@ reconstruct missing data in satellite observations. It can work with gridded dat
 In the later case, the data can be organized in e.g. tracks (or not).
 
 The code is available at:
-[https://github.com/gher-ulg/DINCAE.jl](https://github.com/gher-ulg/DINCAE.jl)
+[https://github.com/gher-uliege/DINCAE.jl](https://github.com/gher-uliege/DINCAE.jl)
 
 The method is described in the following articles:
 
@@ -15,7 +15,7 @@ The method is described in the following articles:
 * Barth, A., Alvera-Azcárate, A., Troupin, C., & Beckers, J.-M. (2022). DINCAE 2.0: multivariate convolutional neural network with error estimates to reconstruct sea surface temperature satellite and altimetry observations. Geoscientific Model Development, 15(5), 2183–2196. https://doi.org/10.5194/gmd-15-2183-2022
 
 The neural network will be trained on the GPU. Note convolutional neural networks can require a lot of GPU memory depending on the domain size. 
-So far, only NVIDIA GPUs are supported by the neural network framework Knet.jl using in DINCAE (beside training on the CPU but which prohibitively slow).
+So far, only NVIDIA GPUs are supported by the neural network framework `Knet.jl` using in DINCAE (beside training on the CPU but which prohibitively slow).
 
 
 ## User API
