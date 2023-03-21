@@ -21,11 +21,11 @@
 DINCAE (Data-Interpolating Convolutional Auto-Encoder) is a neural network to
 reconstruct missing data in satellite observations.
 
-For most application it is sufficient to call the function
+For most applications it is sufficient to call the function
 `DINCAE.reconstruct` directly.
 
 The code is available at:
-[https://github.com/gher-ulg/DINCAE.jl](https://github.com/gher-ulg/DINCAE.jl)
+[https://github.com/gher-uliege/DINCAE.jl](https://github.com/gher-uliege/DINCAE.jl)
 """
 module DINCAE
 using Base.Threads
