@@ -37,9 +37,8 @@ end
 
 #interpnd(pos,A) = interpnd!(pos,A,zeros(eltype(A),length(pos)))
 function interpnd(pos,A)
-    vec = 0 * A[1:length(pos)]
-    #vec = similar(A,length(pos))
-    #vec .= 0
+    vec = similar(A,length(pos))
+    vec .= 0
     interpnd!(pos,A,vec)
     return vec
 end
