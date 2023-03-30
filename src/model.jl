@@ -628,7 +628,7 @@ satellite data).
 ## Mandatory parameters
 
 * `Atype`: array type to use
-* `data_all`: list of named tuples. Every tuple should have `filename`, and `varname`.
+* `data_all`: list of named tuples. Every tuple should have `filename` and `varname`.
 `data_all[1]` will be used for training (and perturbed to prevent overfitting).
 All others entries `data_all[2:end]` will be reconstructed using the training network
 at the epochs defined by `save_epochs`.
@@ -639,18 +639,18 @@ at the epochs defined by `save_epochs`.
 
  * `epochs`: the number of epochs (default `1000`)
  * `batch_size`: the size of a mini-batch (default `50`)
- * `enc_nfilter_internal`: number of filter of the internal encoding layers (default `[16,24,36,54]`)
+ * `enc_nfilter_internal`: number of filters of the internal encoding layers (default `[16,24,36,54]`)
  * `skipconnections`: list of layers with skip connections (default `2:(length(enc_nfilter_internal)+1)`)
  * `clip_grad`: maximum allowed gradient. Elements of the gradients larger than this values will be clipped (default `5.0`).
- * `regularization_L2_beta`: Parameter for L2 reguliziation (default `0`, i.e. no regularization)
+ * `regularization_L2_beta`: Parameter for L2 regularization (default `0`, i.e. no regularization)
  * `save_epochs`: list of epochs where the results should be saved (default `200:10:epochs`)
  * `is3D`: Switch to apply 2D (`is3D == false`) or 3D (`is3D == true`) convolutions (default `false`)
  * `upsampling_method`: interpolation method during upsampling which can be either `:nearest` or `:bilinear` (default `:nearest`)
- * `ntime_win`: number of time instance within the time window. This number should be odd. (default `3`)
- * `learning_rate`: intial learning rate of the ADAM optimizater (default `0.001`)
- * `learning_rate_decay_epoch`: The exponential recay rate of the leaning rate. After `learning_rate_decay_epoch` the learning rate is halved. The learning rate is compute as  `learning_rate * 0.5^(epoch / learning_rate_decay_epoch)`. `learning_rate_decay_epoch` can be `Inf` for a constant learning rate (default)
- * `min_std_err`: minimum error standard deviation preving a division close to zero (default `exp(-5) = 0.006737946999085467`)
- * `loss_weights_refine`: The weigh of the individual refinement layers using in the cost function. 
+ * `ntime_win`: number of time instances within the time window. This number should be odd. (default `3`)
+ * `learning_rate`: initial learning rate of the ADAM optimizer (default `0.001`)
+ * `learning_rate_decay_epoch`: the exponential decay rate of the learning rate. After `learning_rate_decay_epoch` the learning rate is halved. The learning rate is computed as  `learning_rate * 0.5^(epoch / learning_rate_decay_epoch)`. `learning_rate_decay_epoch` can be `Inf` for a constant learning rate (default)
+ * `min_std_err`: minimum error standard deviation preventing a division close to zero (default `exp(-5) = 0.006737946999085467`)
+ * `loss_weights_refine`: the weigh of the individual refinement layers using in the cost function. 
 If `loss_weights_refine` has a single element, then there is no refinement.  (default `(1.,)`)
 
 
