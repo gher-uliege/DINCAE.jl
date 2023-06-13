@@ -1,20 +1,20 @@
-[![Build Status](https://github.com/gher-ulg/DINCAE.jl/workflows/CI/badge.svg)](https://github.com/gher-ulg/DINCAE.jl/actions)
-[![codecov.io](http://codecov.io/github/gher-ulg/DINCAE.jl/coverage.svg?branch=main)](http://codecov.io/github/gher-ulg/DINCAE.jl?branch=main)
-[![documentation stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gher-ulg.github.io/DINCAE.jl/stable/)
-[![documentation dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gher-ulg.github.io/DINCAE.jl/dev/)
+[![Build Status](https://github.com/gher-uliege/DINCAE.jl/workflows/CI/badge.svg)](https://github.com/gher-uliege/DINCAE.jl/actions)
+[![codecov.io](http://codecov.io/github/gher-uliege/DINCAE.jl/coverage.svg?branch=main)](http://codecov.io/github/gher-uliege/DINCAE.jl?branch=main)
+[![documentation stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gher-uliege.github.io/DINCAE.jl/stable/)
+[![documentation dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gher-uliege.github.io/DINCAE.jl/dev/)
 [![DOI](https://zenodo.org/badge/193079989.svg)](https://zenodo.org/badge/latestdoi/193079989)
 
-[![Issues](https://img.shields.io/github/issues-raw/gher-ulg/DINCAE.jl?style=plastic)](https://github.com/gher-ulg/DINCAE.jl/issues)
-![Issues](https://img.shields.io/github/commit-activity/m/gher-ulg/DINCAE.jl)
-![Commit](https://img.shields.io/github/last-commit/gher-ulg/DINCAE.jl) ![GitHub top language](https://img.shields.io/github/languages/top/gher-ulg/DINCAE.jl)
+[![Issues](https://img.shields.io/github/issues-raw/gher-uliege/DINCAE.jl?style=plastic)](https://github.com/gher-uliege/DINCAE.jl/issues)
+![Issues](https://img.shields.io/github/commit-activity/m/gher-uliege/DINCAE.jl)
+![Commit](https://img.shields.io/github/last-commit/gher-uliege/DINCAE.jl) ![GitHub top language](https://img.shields.io/github/languages/top/gher-uliege/DINCAE.jl)
 
 # DINCAE.jl
 
 DINCAE (Data-Interpolating Convolutional Auto-Encoder) is a neural network to reconstruct missing data in satellite observations.
-This repository contains the julia port of DINCAE. The original [python code](https://github.com/gher-ulg/DINCAE) is no longer maintained.
+This repository contains the julia port of DINCAE. The original [python code](https://github.com/gher-uliege/DINCAE) is no longer maintained.
 
 Utilities (for plotting and data preparation) are available in a separate repository
-https://github.com/gher-ulg/DINCAE_utils.jl
+https://github.com/gher-uliege/DINCAE_utils.jl
 
 The method is described in the following articles:
 
@@ -32,14 +32,14 @@ DINCAE is indented to be used with a [GPU](https://en.wikipedia.org/wiki/Graphic
 ## Installation
 
 You need [Julia](https://julialang.org/downloads) (version 1.7 or later) to run `DINCAE`. The command line interface of Julia is sufficient for `DINCAE`.
-If you are using Linux (on a x86_64 CPU), installing and running Julia 1.7.3 is as easy as running these shell commands:
+If you are using Linux (on a x86_64 CPU), installing and running Julia 1.8.3 is as easy as running these shell commands:
 
 ```bash
-curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.3-linux-x86_64.tar.gz | tar -xzf -
-julia-1.7.3/bin/julia
+curl https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.3-linux-x86_64.tar.gz | tar -xzf -
+julia-1.8.3/bin/julia
 ```
 
-This installs Julia in the current directory under the folder `julia-1.7.3`.
+This installs Julia in the current directory under the folder `julia-1.8.3`.
 For more information and other platforms, please see [platform specific instructions](https://julialang.org/downloads/platform/) for further installation instructions.
 You can check the latest available version of Julia at https://julialang.org/downloads but avoid beta releases and release candidates if you are new to Julia.
 
@@ -47,8 +47,8 @@ Inside a Julia terminal, you can download and install `DINCAE` and `DINCAE_utils
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/gher-ulg/DINCAE.jl", rev="main")
-Pkg.add(url="https://github.com/gher-ulg/DINCAE_utils.jl", rev="main")
+Pkg.add(url="https://github.com/gher-uliege/DINCAE.jl", rev="main")
+Pkg.add(url="https://github.com/gher-uliege/DINCAE_utils.jl", rev="main")
 ```
 
 `DINCAE.jl` depends on `Knet.jl` and `CUDA.jl` which will automatically be installed. More information is available at [https://denizyuret.github.io/Knet.jl/latest/install/](https://denizyuret.github.io/Knet.jl/latest/install/) and [https://cuda.juliagpu.org/stable/](https://cuda.juliagpu.org/stable/).
@@ -83,12 +83,12 @@ using Pkg
 Pkg.status()
 ```
 
-The latest version number is available from [here](https://github.com/gher-ulg/DINCAE.jl/releases).
+The latest version number is available from [here](https://github.com/gher-uliege/DINCAE.jl/releases).
 
 ## Documentation
 
-More information is available in the [documentation](https://gher-ulg.github.io/DINCAE.jl/stable/) and the tutorial (available as
-[script](https://github.com/gher-ulg/DINCAE.jl/blob/main/examples/DINCAE_tutorial.jl) and [jupyter notebook](https://github.com/gher-ulg/DINCAE.jl/blob/main/examples/DINCAE_tutorial.ipynb)).
+More information is available in the [documentation](https://gher-uliege.github.io/DINCAE.jl/stable/) and the tutorial (available as
+[script](https://github.com/gher-uliege/DINCAE.jl/blob/main/examples/DINCAE_tutorial.jl) and [jupyter notebook](https://github.com/gher-uliege/DINCAE.jl/blob/main/examples/DINCAE_tutorial.ipynb)).
 
 ## Publications
 

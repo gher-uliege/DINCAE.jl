@@ -37,9 +37,8 @@ end
 
 #interpnd(pos,A) = interpnd!(pos,A,zeros(eltype(A),length(pos)))
 function interpnd(pos,A)
-    vec = 0 * A[1:length(pos)]
-    #vec = similar(A,length(pos))
-    #vec .= 0
+    vec = similar(A,length(pos))
+    vec .= 0
     interpnd!(pos,A,vec)
     return vec
 end
@@ -486,18 +485,18 @@ An (minimal) example of the NetCDF file is:
 ```
 netcdf all-sla.train {
 dimensions:
-	track = 9628 ;
-	time = 7445528 ;
+	time_instances = 9628 ;
+	obs = 7445528 ;
 variables:
-	int64 size(track) ;
-		size:sample_dimension = "time" ;
-	double dates(track) ;
+	int64 size(time_instances) ;
+		size:sample_dimension = "obs" ;
+	double dates(time_instances) ;
 		dates:units = "days since 1900-01-01 00:00:00" ;
-	float sla(time) ;
-	float lon(time) ;
-	float lat(time) ;
-	int64 id(time) ;
-	double dtime(time) ;
+	float sla(obs) ;
+	float lon(obs) ;
+	float lat(obs) ;
+	int64 id(obs) ;
+	double dtime(obs) ;
 		dtime:long_name = "time of measurement" ;
 		dtime:units = "days since 1900-01-01 00:00:00" ;
 }
