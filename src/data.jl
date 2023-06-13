@@ -423,7 +423,7 @@ function getobs(dd::NCData{T},index::Int) where T
     return getobs!(dd,data,index)
 end
 
-function getobs!(dd::NCData,data,index::Int) where T
+function getobs!(dd::NCData,data,index::Int)
     getxy!(dd,index,data[1],data[2])
     return data
 end
