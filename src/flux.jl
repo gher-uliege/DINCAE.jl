@@ -37,7 +37,7 @@ function train_epoch!((model,params,optim),dl,learning_rate; clip_grad = nothing
 end
 
 # TODO, exclude biases
-weights(m::Chain) = params(m)
+weights(m::Chain) = Flux.params(m)
 
 weights(c::Conv) = [c.weight]
 
