@@ -27,7 +27,7 @@ The method is described in the following articles:
 Panel (a) is the original data where we have added clouds (panel (b)). The reconstuction based on the data in panel (b) is shown in panel (c) together
 with its expected standard deviation error (panel (d))
 
-DINCAE is indented to be used with a [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) with [CUDA](https://en.wikipedia.org/wiki/CUDA) support (NVIDIA GPU). The code can also run on a [CPU](https://en.wikipedia.org/wiki/Central_processing_unit) but which will be quite slow.
+DINCAE is intended to be used with a [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) with [CUDA](https://en.wikipedia.org/wiki/CUDA) support (NVIDIA GPU). The code can also run on a [CPU](https://en.wikipedia.org/wiki/Central_processing_unit) but which will be quite slow.
 
 ## Installation
 
@@ -100,7 +100,7 @@ More information is available in the [documentation](https://gher-uliege.github.
 Thank you for citing relevant previous work in DINCAE if you make a scientific publication.
 A bibtex entry can be generated from the DOI by using for example `curl -LH "Accept:  application/x-bibtex"  'https://doi.org/10.5194/gmd-15-2183-2022'`.
 
-Feel free to add your publications by make a pull request or opening an issue.
+Feel free to add your publications by making a pull request or opening an issue.
 
 <!--  LocalWords:  codecov io DINCAE jl Convolutional julia Alvera
  -->
