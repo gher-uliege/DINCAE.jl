@@ -15,13 +15,13 @@ The method is described in the following articles:
 * Barth, A., Alvera-Azcárate, A., Troupin, C., & Beckers, J.-M. (2022). DINCAE 2.0: multivariate convolutional neural network with error estimates to reconstruct sea surface temperature satellite and altimetry observations. Geoscientific Model Development, 15(5), 2183–2196. https://doi.org/10.5194/gmd-15-2183-2022
 
 The neural network will be trained on the GPU. Note convolutional neural networks can require a lot of GPU memory depending on the domain size. 
-So far, only NVIDIA GPUs are supported by the neural network framework `Knet.jl` using in DINCAE (beside training on the CPU but which prohibitively slow).
+So far, only NVIDIA GPUs are supported by the neural network framework `Knet.jl` used in DINCAE (beside training on the CPU but which is prohibitively slow).
 
 
 ## User API
 
 
-In most cases, a user does only need to interact with the function `DINCAE.reconstruct` or `DINCAE.reconstruct_points`.
+In most cases, a user only needs to interact with the function `DINCAE.reconstruct` or `DINCAE.reconstruct_points`.
 
 ```@docs
 DINCAE.reconstruct
