@@ -1,7 +1,7 @@
 # # Tutorial on DINCAE
 #
 # This script/notebook reconstructs missing data in satellite data using a neural
-# network architecture called convolutional auto-encoder described in the
+# network architecture called Convolutional Auto-Encoder described in the
 # following articles:
 #
 # * Barth, A., Alvera-Azcárate, A., Licer, M., and Beckers, J.-M.: DINCAE 1.0: a convolutional neural network with error estimates to reconstruct sea surface temperature satellite observations, Geosci. Model Dev., 13, 1609–1622, https://doi.org/10.5194/gmd-13-1609-2020, 2020.
@@ -23,15 +23,14 @@
 # ```
 #
 # where `"/file/path/"` is the path containing this file and the file `Project.toml`.
-# *Alternatively*, one can also install the modules in the default environement
-# with:
+# *Alternatively*, one can also install the modules in the default environment with:
 #
 # ```julia
 # using Pkg
 # Pkg.add(["CUDA","Knet","NCDatasets","PyPlot"])
 # ```
 #
-# See also https://github.com/gher-ulg/DINCAE.jl#installation
+# See also https://github.com/gher-uliege/DINCAE.jl#installation
 #
 # Load the necessary modules
 
@@ -79,7 +78,7 @@ mkpath(outdir)
 
 # The variable `url` is the OPeNDAP data URL of the MODIS data. Note the final
 # `#fillmismatch` (look here https://github.com/Unidata/netcdf-c/issues/1299#issuecomment-458312804
-# for `#fillmismatch` the suffix)
+# for `#fillmismatch` the suffix).
 # The downloading can take several minutes.
 
 #  `Error { code = 500; message = "Java heap space"; }`
@@ -114,7 +113,7 @@ qual = ds["qual_sst"][:,:,:];
 
 # We ignore all data points with missing quality flags,
 # quality indicator exceeding 3 and temperature
-# larger than 40°C
+# higher than 40°C
 
 sst_t = copy(sst)
 sst_t[(qual .> 3) .& .!ismissing.(qual)] .= missing
@@ -123,7 +122,7 @@ sst_t[(sst_t .> 40) .& .!ismissing.(sst_t)] .= missing
 @info "number of missing observations: $(count(ismissing,sst_t))"
 @info "number of valid observations: $(count(.!ismissing,sst_t))"
 
-# Clean-up the data to them write to disk
+# Clean-up the data to write them to disk.
 
 varname = "sst"
 fname = joinpath(localdir,"modis_cleanup.nc")
@@ -132,8 +131,8 @@ write(ds2,ds,exclude = ["sst","qual"])
 defVar(ds2,varname,sst_t,("lon","lat","time"))
 close(ds2)
 
-# Add a land-sea mask to the file grid points with less than 5% of
-# valid data are considerd as land
+# Add a land-sea mask to the file. Grid points with less than 5% of
+# valid data are considered as land.
 
 DINCAE_utils.add_mask(fname,varname; minseafrac = 0.05)
 
@@ -146,8 +145,8 @@ DINCAE_utils.addcvpoint(fname,varname; mincvfrac = 0.10);
 # # Reconstruct missing data
 #
 #
-# F is the floating point number type for neural network, here we use
-# single precision
+# F is the floating point number type for the neural network. Here we use
+# single precision.
 
 const F = Float32
 
@@ -162,8 +161,8 @@ end
 
 Knet.atype() = Atype
 
-# Setting the paramenters of neural network
-# see document of DINCAE.reconstruct for more information
+# Setting the parameters of neural network.
+# See the documentation of `DINCAE.reconstruct` for more information.
 
 epochs = 1000
 batch_size = 32
@@ -216,7 +215,7 @@ ylabel("loss");
 
 # # Post process results
 #
-# Compute the RMS with the independent validation data
+# Compute the RMS (Root Mean Squared error) with the independent validation data
 
 case = (
     fname_orig = fname,
@@ -237,7 +236,7 @@ DINCAE_utils.plotres(case,fnameavg, clim = nothing, figdir = figdir,
 @info "Figures are in $(figdir)"
 
 
-# Example reconstruction for the 2001-09-12
+# Example reconstruction for 2001-09-12
 # ![reconstruction for the 2001-09-12](Fig/data-avg_2001-09-12.png)
 # Panel (a) is the original data where we have added clouds (panel (b)). The
 # reconstuction based on the data in panel (b) is shown in panel (c) together

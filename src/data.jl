@@ -5,7 +5,7 @@ format_size(sz) = join(string.(sz),"×")
     lon,lat,time,data,missingmask,mask = load_gridded_nc(fname,varname; minfrac = 0.05)
 
 Load the variable `varname` from the NetCDF file `fname`. The variable `lon` is
-the longitude in degrees east, `lat` is the latitude in degrees North, `time` is
+the longitude in degrees east, `lat` is the latitude in degrees north, `time` is
 a DateTime vector, `data_full` is a 3-d array with the data, `missingmask` is a boolean mask where true means the data is missing and `mask` is a boolean mask
 where true means the data location is valid, e.g. sea points for sea surface temperature.
 
@@ -42,8 +42,8 @@ function load_gridded_nc(fname::AbstractString,varname::AbstractString; minfrac 
     if "mask" in ds
         mask = nomissing(ds["mask"][:,:]) .== 1;
     else
-        @info("compute mask from $varname: sea point should have at least " *
-              "$minfrac for valid data tought time")
+        @info("compute mask from $varname: each sea point should have at least " *
+              "$minfrac for valid data through time")
 
         missingfraction = mean(isnan.(data),dims=3)
         println("range of fraction of missing data: ",extrema(missingfraction))
@@ -423,7 +423,7 @@ function getobs(dd::NCData{T},index::Int) where T
     return getobs!(dd,data,index)
 end
 
-function getobs!(dd::NCData,data,index::Int) where T
+function getobs!(dd::NCData,data,index::Int)
     getxy!(dd,index,data[1],data[2])
     return data
 end

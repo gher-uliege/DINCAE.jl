@@ -466,14 +466,15 @@ Mandatory parameters:
 * `T`: `Float32` or `Float64`: float-type used by the neural network
 * `Array{T}` or `KnetArray{T}`: array-type used by the neural network.
 * `filename`: NetCDF file in the format described below.
-* `varname`: name of the primary variable in the NetCDF file
+* `varname`: name of the primary variable in the NetCDF file.
 * `grid`: tuple of ranges with the grid in the longitude and latitude direction e.g. `(-180:1:180,-90:1:90)`.
-* `fnames_rec`: NetCDF file names of the reconstruction
+* `fnames_rec`: NetCDF file names of the reconstruction.
 
 Optional parameters:
-* `jitter_std_pos`: standard deviation of the noise to be added to the position of observation (default `(5,5)`)
-* `auxdata_files`: gridded auxillary data file for a multivariate reconstruction. `auxdata_files` is an array of named tuples with the fields (`filename`, the file name of the NetCDF file, `varname` the NetCDF name of the primary variable and `errvarname` the NetCDF name of the expected standard deviation error). For example:
-
+* `jitter_std_pos`: standard deviation of the noise to be added to the position of the observations (default `(5,5)`)
+* `auxdata_files`: gridded auxiliary data file for a multivariate reconstruction. `auxdata_files` is an array of named tuples with the fields (`filename`, the file name of the NetCDF file, `varname` the NetCDF name of the primary variable and `errvarname` the NetCDF name of the expected standard deviation error). For example:
+* `probability_skip_for_training`: For a given time step n, every track from the same time step n will be skipped by this probability during training (default 0.2). This does not affect the tracks from previous (n-1,n-2,..) and following time steps (n+1,n+2,...). The goal of this parameter is to force the neural network to learn to interpolate the data in time.
+				
 ```
 auxdata_files = [
   (filename = "big-sst-file.nc"),
