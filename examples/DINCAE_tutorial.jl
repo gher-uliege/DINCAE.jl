@@ -11,10 +11,10 @@
 # Oceanography Distributed Active Archive Center (PO.DAAC) JPL, NASA.
 # More information is available at https://dx.doi.org/10.5067/MODST-1D4D9
 #
-# This notebook/script is indented to be run on a GPU with CUDA support (NVIDIA GPU)
+# This notebook/script is intended to be run on a GPU with CUDA support (NVIDIA GPU)
 # with a least 8 GB of RAM.
 
-# The modules necessary to run the tutorial can be install with:
+# The modules necessary to run the tutorial can be installed with:
 #
 # ```julia
 # using Pkg
@@ -113,7 +113,7 @@ qual = ds["qual_sst"][:,:,:];
 
 # We ignore all data points with missing quality flags,
 # quality indicator exceeding 3 and temperature
-# higher than 40°C
+# higher than 40°C.
 
 sst_t = copy(sst)
 sst_t[(qual .> 3) .& .!ismissing.(qual)] .= missing
@@ -192,7 +192,7 @@ data_all = [data,data_test]
 # epochs = 10
 # save_epochs = epochs:epochs
 
-# Start the training and reconstruction of the neural network
+# Start the training and reconstruction of the neural network.
 
 loss = DINCAE.reconstruct(
     Atype,data_all,fnames_rec;
@@ -226,7 +226,7 @@ fnameavg = joinpath(outdir,"data-avg.nc")
 cvrms = DINCAE_utils.cvrms(case,fnameavg)
 @info "Cross-validation RMS error is: $cvrms"
 
-# Next we plot all time instances. The figures with be placed in the
+# Next we plot all time instances. The figures will be placed in the
 # directory `figdir`
 
 figdir = joinpath(outdir,"Fig")
