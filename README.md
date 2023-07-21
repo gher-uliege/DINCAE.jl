@@ -94,13 +94,14 @@ More information is available in the [documentation](https://gher-uliege.github.
 
 * Barth, A., Alvera-Azcárate, A., Licer, M., & Beckers, J.-M. (2020). DINCAE 1.0: a convolutional neural network with error estimates to reconstruct sea surface temperature satellite observations. Geoscientific Model Development, 13(3), 1609–1622. https://doi.org/10.5194/gmd-13-1609-2020
 * Han, Z., He, Y., Liu, G., & Perrie, W. (2020). Application of DINCAE to Reconstruct the Gaps in Chlorophyll-a Satellite Observations in the South China Sea and West Philippine Sea. Remote Sensing, 12(3), 480. https://doi.org/10.3390/rs12030480
+* Ji, C., Zhang, Y., Cheng, Q., Tsou, J. Y. (2021). Investigating ocean surface responses to typhoons using reconstructed satellite data. International Journal of Applied Earth Observation and Geoinformation, 103, 102474. https://doi.org/10.1016/j.jag.2021.102474
 * Barth, A., Alvera-Azcárate, A., Troupin, C., & Beckers, J.-M. (2022). DINCAE 2.0: multivariate convolutional neural network with error estimates to reconstruct sea surface temperature satellite and altimetry observations. Geoscientific Model Development, 15(5), 2183–2196. https://doi.org/10.5194/gmd-15-2183-2022
 * Jung, S., Yoo, C., & Im, J. (2022). High-Resolution Seamless Daily Sea Surface Temperature Based on Satellite Data Fusion and Machine Learning over Kuroshio Extension. Remote Sensing, 14(3), 575. https://doi.org/10.3390/rs14030575
 
 Thank you for citing relevant previous work in DINCAE if you make a scientific publication.
 A bibtex entry can be generated from the DOI by using for example `curl -LH "Accept:  application/x-bibtex"  'https://doi.org/10.5194/gmd-15-2183-2022'`.
 
-Feel free to add your publications by making a pull request or opening an issue.
+Feel free to add your publications by making a pull request or opening an [issue](https://github.com/gher-uliege/DINCAE.jl/issues/new/choose).
 
 <!--  LocalWords:  codecov io DINCAE jl Convolutional julia Alvera
  -->
