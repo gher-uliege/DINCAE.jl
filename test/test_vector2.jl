@@ -4,7 +4,6 @@
 
 using Test
 using DINCAE
-using Knet
 using CUDA
 
 sz = (100,120)
@@ -28,7 +27,7 @@ cost = @time DINCAE.vector2_costfun(xrec,xtrue,truth_uncertain,directionobs)
 
 if CUDA.functional()
     # test on GPU
-    for TA = [KnetArray, CuArray]
+    for TA = [CuArray]
         cost_TA = DINCAE.vector2_costfun(TA(xrec),TA(xtrue),truth_uncertain,TA(directionobs))
         @test cost ≈ cost_TA
     end
