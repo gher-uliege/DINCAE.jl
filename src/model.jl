@@ -46,7 +46,7 @@ end
 function costfun_single(m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,truth_uncertain)
     #return sum(m_rec)
     #n_noncloud = sum(mask_noncloud)
-    n_noncloud = Flux.Zygote.dropgrad(sum(mask_noncloud))
+    n_noncloud = ChainRulesCore.ignore_derivatives(sum(mask_noncloud))
     #n_noncloud = 100
     # if n_noncloud == 0
     #     @show n_noncloud

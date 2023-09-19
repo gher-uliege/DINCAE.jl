@@ -7,7 +7,7 @@ _Upsample(sz::Tuple, nvar; method = :nearest) = Upsample(method,scale = 2)
 function train_init(model,optim; clip_grad = nothing, learning_rate = nothing)
     @assert optim == :ADAM
 
-    opt = ADAM(learning_rate)
+    opt = Flux.Adam(learning_rate)
     if clip_grad !== nothing
         opt = Flux.Optimiser(ClipValue(clip_grad),opt)
     end
