@@ -32,14 +32,14 @@ DINCAE is intended to be used with a [GPU](https://en.wikipedia.org/wiki/Graphic
 ## Installation
 
 You need [Julia](https://julialang.org/downloads) (version 1.7 or later) to run `DINCAE`. The command line interface of Julia is sufficient for `DINCAE`.
-If you are using Linux (on a x86_64 CPU), installing and running Julia 1.8.5 is as easy as running these shell commands:
+If you are using Linux (on a x86_64 CPU), installing and running Julia 1.9.3 is as easy as running these shell commands:
 
 ```bash
-curl https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.5-linux-x86_64.tar.gz | tar -xzf -
-julia-1.8.5/bin/julia
+curl https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.3-linux-x86_64.tar.gz | tar -xzf -
+julia-1.9.3/bin/julia
 ```
 
-This installs Julia in the current directory under the folder `julia-1.8.5`.
+This installs Julia in the current directory under the folder `julia-1.9.3`.
 For more information and other platforms, please see [platform specific instructions](https://julialang.org/downloads/platform/) for further installation instructions.
 You can check the latest available version of Julia at https://julialang.org/downloads but avoid beta releases and release candidates if you are new to Julia.
 
@@ -51,7 +51,8 @@ Pkg.add(url="https://github.com/gher-uliege/DINCAE.jl", rev="main")
 Pkg.add(url="https://github.com/gher-uliege/DINCAE_utils.jl", rev="main")
 ```
 
-`DINCAE.jl` depends on `Knet.jl` and `CUDA.jl` which will automatically be installed. More information is available at [https://denizyuret.github.io/Knet.jl/latest/install/](https://denizyuret.github.io/Knet.jl/latest/install/) and [https://cuda.juliagpu.org/stable/](https://cuda.juliagpu.org/stable/).
+`DINCAE.jl` depends on `Flux.jl` and `CUDA.jl` which will automatically be installed.
+More information is available in [documentation of Flux.jl](http://fluxml.ai/Flux.jl/stable/#Installation).
 
 After this, you should be able to load `DINCAE` with:
 
@@ -62,7 +63,7 @@ using DINCAE
 #### Checking CUDA installation
 To confirm that `CUDA` is functional to use the GPU (otherwise the CPU is used and the code will be much slower), the following command:
 ```julia
-CUDA.functional() 
+CUDA.functional()
 ```
 should return `true`.
 
