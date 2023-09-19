@@ -27,7 +27,7 @@
 #
 # ```julia
 # using Pkg
-# Pkg.add(["CUDA","Knet","NCDatasets","PyPlot"])
+# Pkg.add(["CUDA","NCDatasets","PyPlot"])
 # ```
 #
 # See also https://github.com/gher-uliege/DINCAE.jl#installation
@@ -38,7 +38,6 @@ using CUDA
 using DINCAE
 using DINCAE_utils
 using Dates
-using Knet
 using NCDatasets
 using PyPlot
 
@@ -153,13 +152,11 @@ const F = Float32
 # Test if CUDA is functional to use the GPU, otherwise the CPU is used.
 
 if CUDA.functional()
-    Atype = KnetArray{F}
+    Atype = CuArray{F}
 else
     @warn "No supported GPU found. We will use the CPU which is very slow. Please check https://developer.nvidia.com/cuda-gpus"
     Atype = Array{F}
 end
-
-Knet.atype() = Atype
 
 # Setting the parameters of neural network.
 # See the documentation of `DINCAE.reconstruct` for more information.
