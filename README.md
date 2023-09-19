@@ -31,7 +31,7 @@ DINCAE is intended to be used with a [GPU](https://en.wikipedia.org/wiki/Graphic
 
 ## Installation
 
-You need [Julia](https://julialang.org/downloads) (version 1.7 or later) to run `DINCAE`. The command line interface of Julia is sufficient for `DINCAE`.
+You need [Julia](https://julialang.org/downloads) (version 1.9 or later) to run `DINCAE`. The command line interface of Julia is sufficient for `DINCAE`.
 If you are using Linux (on a x86_64 CPU), installing and running Julia 1.9.3 is as easy as running these shell commands:
 
 ```bash
