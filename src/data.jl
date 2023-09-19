@@ -211,7 +211,7 @@ function NCData(lon,lat,time,data_full,missingmask;
     dayofyear_cos = Float32.(cos.(2π * dayofyear/year_length))
     dayofyear_sin = Float32.(sin.(2π * dayofyear/year_length))
 
-    data = data_full .- meandata
+    data = data_full 
     sz = size(data)
 
     # dimensions of x: lon, lat, parameter, time, 2
