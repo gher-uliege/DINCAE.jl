@@ -9,6 +9,7 @@ makedocs(;
     repo="https://github.com/gher-uliege/DINCAE.jl/blob/{commit}{path}#L{line}",
     sitename="DINCAE.jl",
     authors="Alexander Barth <barth.alexander@gmail.com>",
+    checkdocs=:none,
 )
 
 deploydocs(;
