@@ -609,6 +609,9 @@ function reconstruct_points(
     @show sz
     # test loss function
     #@show model(xin,xtrue)
+    @debug "size of input (xin)" size(xin)
+    @debug "size of xtrue " size(xtrue)
+
     @show loss_function(model,xin,xtrue)
 
     losses = []
