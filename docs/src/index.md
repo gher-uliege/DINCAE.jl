@@ -44,3 +44,14 @@ Convolutional neural networks can require "a lot" of GPU memory. These parameter
 * use fewer layers (e.g. `enc_nfilter_internal` = [16,24,36] or [16,24])
 * use less filters (reduce the values of the optional parameter enc_nfilter_internal)
 * use a smaller domain or lower resolution
+
+
+## Troubleshooting
+
+If you get the error about `Scalar indexing is disallowed` with Flux 0.14 you need to load (and possibly install `cuDNN`) before calling a function in DINCAE.jl
+
+``` julia
+using cuDNN
+using DINCAE
+# ...
+```
