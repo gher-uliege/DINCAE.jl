@@ -43,7 +43,22 @@ function transform_mσ2(x,gamma)
         (transform_mσ2_single(x[allst...,(1:2).+2*ivar,:],gamma) for ivar = 0:noutput-1))
 end
 
-function costfun_single(m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,truth_uncertain)
+
+function sum_laplacian_penalty(penalty,x)
+    if penalty == 0
+        return 0
+    else
+        return penalty * (
+            sum((x[3:end,:,:,:] - 2*x[2:end-1,:,:,:] + x[1:end-2,:,:,:]).^2) +
+            sum((x[:,3:end,:,:] - 2*x[:,2:end-1,:,:] + x[:,1:end-2,:,:]).^2))
+    end
+end
+
+function costfun_single(
+    m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,truth_uncertain;
+    laplacian_penalty = 0,
+    laplacian_error_penalty = laplacian_penalty)
+
     #return sum(m_rec)
     #n_noncloud = sum(mask_noncloud)
     n_noncloud = ChainRulesCore.ignore_derivatives(sum(mask_noncloud))
@@ -82,9 +97,12 @@ function costfun_single(m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,truth_uncert
 
     #return sum((m_rec - m_true).^2  .* mask_noncloud)
     #TEST
-    return cost
+
+    return (cost
+            + sum_laplacian_penalty(laplacian_penalty,m_rec)
+            + sum_laplacian_penalty(laplacian_error_penalty,σ2_rec))
 end
-function costfun_single(xrec,xtrue,truth_uncertain)
+function costfun_single(xrec,xtrue,truth_uncertain; kwargs...)
     N = ndims(xtrue)
     allst = ntuple(i -> :, N-2)
 
@@ -101,7 +119,8 @@ function costfun_single(xrec,xtrue,truth_uncertain)
 #    @show extrema(Array(m_rec))
 #    @show extrema(Array(m_true))
 
-    cost = costfun_single(m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,truth_uncertain)
+    cost = costfun_single(m_rec,σ2_rec,m_true,σ2_true,mask_noncloud,
+                          truth_uncertain; kwargs...)
 
     #difference2 = (m_rec - m_true).^2  .* mask_noncloud
     #costMSE = sum(difference2) / n_noncloud
@@ -113,7 +132,7 @@ function costfun_single(xrec,xtrue,truth_uncertain)
 end
 
 # cost function for multivariate output case
-function costfun(xrec,xtrue,truth_uncertain)
+function costfun(xrec,xtrue,truth_uncertain; kwargs...)
     N = ndims(xtrue)
     noutput = size(xtrue,N-1) ÷ 2
 
@@ -125,7 +144,8 @@ function costfun(xrec,xtrue,truth_uncertain)
             costfun_single(
                 xrec[allst...,(1:2) .+ 2*ivar,:],
                 xtrue[allst...,(1:2) .+ 2*ivar,:],
-                truth_uncertain
+                truth_uncertain;
+                kwargs...
             )
             for ivar in 0:noutput-1 ])
 end
@@ -146,8 +166,13 @@ function StepModel(
     chains,loss_weights,truth_uncertain,gamma;
     regularization_L1 = 0.f0,
     regularization_L2 = 0.f0,
+    laplacian_penalty = 0,
+    laplacian_error_penalty = laplacian_penalty,
     final_layer = xout -> transform_mσ2(xout,gamma),
-    costfun = (xout,xtrue) -> costfun(xout,xtrue,truth_uncertain),
+    costfun = (xout,xtrue) -> costfun(
+        xout,xtrue,truth_uncertain,
+        laplacian_penalty = laplacian_penalty,
+        laplacian_error_penalty = laplacian_error_penalty),
     )
     return StepModel(
         chains,loss_weights,
@@ -328,6 +353,8 @@ function reconstruct(Atype,data_all,fnames_rec;
                      direction_obs = nothing,
                      remove_mean = true,
                      paramfile = nothing,
+                     laplacian_penalty = 0,
+                     laplacian_error_penalty = laplacian_penalty,
 )
     DB(Atype,d,batch_size) = (Atype.(tmp) for tmp in DataLoader(d,batch_size))
 
@@ -434,6 +461,8 @@ function reconstruct(Atype,data_all,fnames_rec;
             steps,loss_weights_refine,truth_uncertain,gamma;
             regularization_L1 = regularization_L1_beta,
             regularization_L2 = regularization_L2_beta,
+            laplacian_penalty = laplacian_penalty,
+            laplacian_error_penalty = laplacian_error_penalty,
         )
     else
         model = StepModel(
@@ -442,11 +471,14 @@ function reconstruct(Atype,data_all,fnames_rec;
             costfun = (xrec,xtrue) -> vector2_costfun(xrec,xtrue,truth_uncertain,Atype(direction_obs)),
             regularization_L1 = regularization_L1_beta,
             regularization_L2 = regularization_L2_beta,
+            laplacian_penalty = laplacian_penalty,
+            laplacian_error_penalty = laplacian_error_penalty,
         )
     end
 
     device = _to_device(Atype)
 
+    @info "using device:      $device"
     model = model |> device
 
     xrec = model(Atype(inputs_))

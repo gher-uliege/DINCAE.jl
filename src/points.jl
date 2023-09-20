@@ -372,7 +372,11 @@ function DINCAE.sizex(d::PointCloud)
     return (sz[1],sz[2],nvar)
 end
 
-function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth_uncertain) where TA <: Union{Array{T,N},CuArray{T,N}#=,KnetArray{T,N}=#} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
+function costfun(
+    xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth_uncertain;
+    laplacian_penalty = 0,
+    laplacian_error_penalty = laplacian_penalty,
+    ) where TA <: Union{Array{T,N},CuArray{T,N}#=,KnetArray{T,N}=#} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
 
     #@show typeof(xin)
     #@show typeof(xrec)
@@ -427,7 +431,21 @@ function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth
     xtrue_interp2 = reduce(vcat,map(xt -> xt.x,xtrue))
     cost = DINCAE.costfun(xrec_interp2[:,:,1:1],xtrue_interp2[:,:,1:1],truth_uncertain)
 
-    return cost
+    if (laplacian_penalty != 0) || (laplacian_error_penalty != 0)
+        allst = ntuple(i -> :, N-2)
+        m_rec = xrec[allst...,1:1,:]
+        σ2_rec = xrec[allst...,2:2,:]
+
+        σ2_true = sinv(xtrue[allst...,2:2,:])
+        m_true = xtrue[allst...,1:1,:] .* σ2_true
+
+        return (cost
+                + sum_laplacian_penalty(laplacian_penalty,m_rec)
+                + sum_laplacian_penalty(laplacian_error_penalty,σ2_rec))
+
+    else
+        return cost
+    end
 end
 
 
@@ -469,7 +487,7 @@ Optional parameters:
 * `jitter_std_pos`: standard deviation of the noise to be added to the position of the observations (default `(5,5)`)
 * `auxdata_files`: gridded auxiliary data file for a multivariate reconstruction. `auxdata_files` is an array of named tuples with the fields (`filename`, the file name of the NetCDF file, `varname` the NetCDF name of the primary variable and `errvarname` the NetCDF name of the expected standard deviation error). For example:
 * `probability_skip_for_training`: For a given time step n, every track from the same time step n will be skipped by this probability during training (default 0.2). This does not affect the tracks from previous (n-1,n-2,..) and following time steps (n+1,n+2,...). The goal of this parameter is to force the neural network to learn to interpolate the data in time.
-				
+
 ```
 auxdata_files = [
   (filename = "big-sst-file.nc"),
@@ -529,6 +547,8 @@ function reconstruct_points(
     loss_weights_refine = (1.,),
     auxdata_files = [],
     savesnapshot = false,
+    laplacian_penalty = 0,
+    laplacian_error_penalty = laplacian_penalty,
 )
 
     if isempty(save_epochs) || epochs < minimum(save_epochs)
@@ -590,6 +610,8 @@ function reconstruct_points(
         steps,loss_weights_refine,truth_uncertain,gamma;
         regularization_L1 = regularization_L1_beta,
         regularization_L2 = regularization_L2_beta,
+        laplacian_penalty = laplacian_penalty,
+        laplacian_error_penalty = laplacian_error_penalty,
     )
 
     device = _to_device(Atype)
