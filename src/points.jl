@@ -43,12 +43,17 @@ function interpnd(pos,A)
     return vec
 end
 
-
-
 #Knet.AutoGrad.@primitive interpnd(pos,A),dy,y 0 interp_adjn(pos,dy,size(A))
 
-Flux.Zygote.@adjoint interpnd(pos,A) = interpnd(pos,A), dy -> (
-    fill(ntuple(i -> 0,length(pos[1])),length(pos)),interp_adjn(pos,dy,size(A)))
+function ChainRulesCore.rrule(::typeof(interpnd), pos::AbstractVector{<:NTuple{N}}, A) where N
+    function interpnd_pullback(dy)
+        dpos = similar(pos)
+        fill!(dpos,ntuple(i -> 0,N))
+        dA = interp_adjn(pos,dy,size(A))
+        return (NoTangent(),dpos,dA)
+    end
+    return interpnd(pos,A), interpnd_pullback
+end
 
 """
         all positions should be within the domain. exclusive upper bound
@@ -75,7 +80,6 @@ function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
         end
     end
 
-    #return A2
     return nothing
 end
 
