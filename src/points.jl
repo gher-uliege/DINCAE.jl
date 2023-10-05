@@ -641,7 +641,7 @@ function reconstruct_points(
 
     @show loss_function(model,xin,xtrue)
 
-    losses = []
+    losses = Float64[]
 
 
     if isfile(fname_rec)
