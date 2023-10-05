@@ -51,9 +51,6 @@ Pkg.add(url="https://github.com/gher-uliege/DINCAE.jl", rev="main")
 Pkg.add(url="https://github.com/gher-uliege/DINCAE_utils.jl", rev="main")
 ```
 
-`DINCAE.jl` depends on `Flux.jl` and `CUDA.jl` which will automatically be installed.
-More information is available in [documentation of Flux.jl](http://fluxml.ai/Flux.jl/stable/#Installation).
-
 After this, you should be able to load `DINCAE` with:
 
 ``` julia
