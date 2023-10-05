@@ -48,6 +48,8 @@ Convolutional neural networks can require "a lot" of GPU memory. These parameter
 
 ## Troubleshooting
 
+### Installation of cuDNN
+
 If you get the warniong `Package cuDNN not found in current path` or the error `Scalar indexing is disallowed`:
 
 ```
@@ -65,3 +67,10 @@ using cuDNN
 using DINCAE
 # ...
 ```
+
+### Dependencies of DINCAE.jl
+
+`DINCAE.jl` depends on `Flux.jl` and `CUDA.jl` which will automatically be installed.
+If you have some problems installing these package you might consult the
+[documentation of `Flux.jl`](http://fluxml.ai/Flux.jl/stable/#Installation) or 
+[`CUDA.jl`](https://cuda.juliagpu.org/stable/installation/overview/).
