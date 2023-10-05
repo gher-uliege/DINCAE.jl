@@ -691,4 +691,37 @@ function reconstruct_points(
         end
     end
     close(ds)
+
+    # Write analysis parameters in a file
+    if paramfile !== nothing
+        NCDataset(paramfile,"c") do ds_
+            defVar(ds_,"losses",losses,("epochs",))
+            ds_.attrib["epochs"] = epochs
+            ds_.attrib["batch_size"] = batch_size
+            ds_.attrib["truth_uncertain"] = Int(truth_uncertain)
+            ds_.attrib["enc_nfilter_internal"] = Vector{Int}(collect(enc_nfilter_internal))
+            ds_.attrib["skipconnections"] = Vector{Int}(collect(skipconnections))
+            ds_.attrib["clip_grad"] = clip_grad
+            ds_.attrib["regularization_L1_beta"] = regularization_L1_beta
+            ds_.attrib["regularization_L2_beta"] = regularization_L2_beta
+            ds_.attrib["save_epochs"] = Vector{Int}(save_epochs)
+            ds_.attrib["upsampling_method"] = string(upsampling_method)
+            ds_.attrib["probability_skip_for_training"] = probability_skip_for_training
+            ds_.attrib["jitter_std_pos"] = Vector{Float64}(collect(jitter_std_pos))
+            ds_.attrib["ntime_win"] = ntime_win
+            ds_.attrib["learning_rate"] = learning_rate
+            ds_.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
+            ds_.attrib["min_std_err"] = min_std_err
+            ds_.attrib["loss_weights_refine"] = Vector{Float64}(collect(loss_weights_refine))
+            ds_.attrib["auxdata_files"] = Vector{String}(collect(auxdata_files))
+            ds_.attrib["savesnapshot"] = Int(savesnapshot)
+            ds_.attrib["laplacian_penalty"] = laplacian_penalty
+            ds_.attrib["laplacian_error_penalty"] = laplacian_error_penalty
+        end
+    end
+
+    # Write 
+    return losses
 end
+
+
