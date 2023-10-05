@@ -251,7 +251,7 @@ function NCData(lon,lat,time,data_full,missingmask,ndims;
         end
     end
 
-    data = data_full 
+    data = data_full .- meandata
     sz = size(data)
 
     if direction_obs == nothing
