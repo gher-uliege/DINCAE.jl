@@ -48,7 +48,21 @@ Convolutional neural networks can require "a lot" of GPU memory. These parameter
 
 ## Troubleshooting
 
-If you get the error about `Scalar indexing is disallowed` with Flux 0.14 you need to load (and possibly install `cuDNN`) before calling a function in DINCAE.jl
+
+A warning will be issued if cuDNN has not been installed installed:
+
+
+If you get the warniong about `Package cuDNN not found in current path.` or the error `Scalar indexing is disallowed` with Flux 0.14:
+
+```
+julia> using DINCAE
+┌ Warning: Package cuDNN not found in current path.
+│ - Run `import Pkg; Pkg.add("cuDNN")` to install the cuDNN package, then restart julia.
+│ - If cuDNN is not installed, some Flux functionalities will not be available when running on the GPU.
+```
+
+
+You need to install and load cuDNN before calling a function in DINCAE.jl:
 
 ``` julia
 using cuDNN
