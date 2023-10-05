@@ -51,6 +51,18 @@ Pkg.add(url="https://github.com/gher-uliege/DINCAE.jl", rev="main")
 Pkg.add(url="https://github.com/gher-uliege/DINCAE_utils.jl", rev="main")
 ```
 
+### CUDA support
+
+To enable (optional) CUDA support on NVIDIA GPUs one need to install also the packages `CUDA` and `cuDNN`:
+
+```julia
+using Pkg 
+Pkg.add("CUDA")
+Pkg.add("cuDNN")
+```
+
+With some adaptions to DINCAE.j, one can probably also use AMD GPUs (with the package `AMDGPU`) and Apple Silicon (with the package `Metal`). PRs to implement support of these GPUs would be very welcome.
+
 After this, you should be able to load `DINCAE` with:
 
 ``` julia
@@ -58,6 +70,7 @@ using DINCAE
 ```
 
 #### Checking CUDA installation
+
 To confirm that `CUDA` is functional to use the GPU (otherwise the CPU is used and the code will be much slower), the following command:
 ```julia
 CUDA.functional()
