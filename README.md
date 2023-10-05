@@ -61,7 +61,7 @@ Pkg.add("CUDA")
 Pkg.add("cuDNN")
 ```
 
-With some adaptions to DINCAE.j, one can probably also use AMD GPUs (with the package `AMDGPU`) and Apple Silicon (with the package `Metal`). PRs to implement support of these GPUs would be very welcome.
+With some adaptions to `DINCAE.jl`, one can probably also use AMD GPUs (with the package `AMDGPU`) and Apple Silicon (with the package `Metal`). PRs to implement support of these GPUs would be very welcome.
 
 After this, you should be able to load `DINCAE` with:
 
