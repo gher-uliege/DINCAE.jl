@@ -1,32 +1,38 @@
 name = "DINCAE"
 uuid = "0d879ee6-e5ed-4b6f-b65c-f78122b59944"
-authors = ["Alexander Barth <barth.alexander@gmail.com>"]
-version = "2.0.2"
-keywords = ["satellite observations", "oceanography", "missing data", "inpainting", "auto-encoder","neural network"]
+keywords = ["satellite observations", "oceanography", "missing data", "inpainting", "auto-encoder", "neural network"]
 license = "GPL3+"
 desc = "DINCAE (Data-Interpolating Convolutional Auto-Encoder) is a neural network to reconstruct missing data in satellite observations"
+authors = ["Alexander Barth <barth.alexander@gmail.com>"]
+version = "2.0.2"
 
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-Knet = "1902f260-5fb4-5aff-8c31-6271790ab950"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 
 [compat]
-julia = "1"
-CUDA = "3.8"
-Knet = "1.4"
+CUDA = "3.8, 4"
+ChainRulesCore = "1"
+Flux = "0.14"
 NCDatasets = "0.11, 0.12"
 ThreadsX = "0.1"
+julia = "1"
 
 [extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "NCDatasets", "Random"]
+test = ["Test", "NCDatasets", "Random", "CUDA", "Flux", "LinearAlgebra"]

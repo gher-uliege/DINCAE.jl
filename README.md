@@ -31,15 +31,15 @@ DINCAE is intended to be used with a [GPU](https://en.wikipedia.org/wiki/Graphic
 
 ## Installation
 
-You need [Julia](https://julialang.org/downloads) (version 1.7 or later) to run `DINCAE`. The command line interface of Julia is sufficient for `DINCAE`.
-If you are using Linux (on a x86_64 CPU), installing and running Julia 1.8.5 is as easy as running these shell commands:
+You need [Julia](https://julialang.org/downloads) (version 1.9 or later) to run `DINCAE`. The command line interface of Julia is sufficient for `DINCAE`.
+If you are using Linux (on a x86_64 CPU), installing and running Julia 1.9.3 is as easy as running these shell commands:
 
 ```bash
-curl https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.5-linux-x86_64.tar.gz | tar -xzf -
-julia-1.8.5/bin/julia
+curl https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.3-linux-x86_64.tar.gz | tar -xzf -
+julia-1.9.3/bin/julia
 ```
 
-This installs Julia in the current directory under the folder `julia-1.8.5`.
+This installs Julia in the current directory under the folder `julia-1.9.3`.
 For more information and other platforms, please see [platform specific instructions](https://julialang.org/downloads/platform/) for further installation instructions.
 You can check the latest available version of Julia at https://julialang.org/downloads but avoid beta releases and release candidates if you are new to Julia.
 
@@ -51,7 +51,17 @@ Pkg.add(url="https://github.com/gher-uliege/DINCAE.jl", rev="main")
 Pkg.add(url="https://github.com/gher-uliege/DINCAE_utils.jl", rev="main")
 ```
 
-`DINCAE.jl` depends on `Knet.jl` and `CUDA.jl` which will automatically be installed. More information is available at [https://denizyuret.github.io/Knet.jl/latest/install/](https://denizyuret.github.io/Knet.jl/latest/install/) and [https://cuda.juliagpu.org/stable/](https://cuda.juliagpu.org/stable/).
+### CUDA support
+
+To enable (optional) CUDA support on NVIDIA GPUs one need to install also the packages `CUDA` and `cuDNN`:
+
+```julia
+using Pkg 
+Pkg.add("CUDA")
+Pkg.add("cuDNN")
+```
+
+With some adaptions to `DINCAE.jl`, one can probably also use AMD GPUs (with the package `AMDGPU`) and Apple Silicon (with the package `Metal`). PRs to implement support of these GPUs would be very welcome.
 
 After this, you should be able to load `DINCAE` with:
 
@@ -60,9 +70,10 @@ using DINCAE
 ```
 
 #### Checking CUDA installation
+
 To confirm that `CUDA` is functional to use the GPU (otherwise the CPU is used and the code will be much slower), the following command:
 ```julia
-CUDA.functional() 
+CUDA.functional()
 ```
 should return `true`.
 
@@ -92,12 +103,16 @@ More information is available in the [documentation](https://gher-uliege.github.
 
 ## Publications
 
+### About the code
 * Barth, A., Alvera-Azcárate, A., Licer, M., & Beckers, J.-M. (2020). DINCAE 1.0: a convolutional neural network with error estimates to reconstruct sea surface temperature satellite observations. Geoscientific Model Development, 13(3), 1609–1622. https://doi.org/10.5194/gmd-13-1609-2020
-* Han, Z., He, Y., Liu, G., & Perrie, W. (2020). Application of DINCAE to Reconstruct the Gaps in Chlorophyll-a Satellite Observations in the South China Sea and West Philippine Sea. Remote Sensing, 12(3), 480. https://doi.org/10.3390/rs12030480
-* Ji, C., Zhang, Y., Cheng, Q., Tsou, J. Y. (2021). Investigating ocean surface responses to typhoons using reconstructed satellite data. International Journal of Applied Earth Observation and Geoinformation, 103, 102474. https://doi.org/10.1016/j.jag.2021.102474
 * Barth, A., Alvera-Azcárate, A., Troupin, C., & Beckers, J.-M. (2022). DINCAE 2.0: multivariate convolutional neural network with error estimates to reconstruct sea surface temperature satellite and altimetry observations. Geoscientific Model Development, 15(5), 2183–2196. https://doi.org/10.5194/gmd-15-2183-2022
-* Jung, S., Yoo, C., & Im, J. (2022). High-Resolution Seamless Daily Sea Surface Temperature Based on Satellite Data Fusion and Machine Learning over Kuroshio Extension. Remote Sensing, 14(3), 575. https://doi.org/10.3390/rs14030575
 
+### Applications 
+* Han, Z., He, Y., Liu, G., & Perrie, W. (2020). Application of DINCAE to Reconstruct the Gaps in Chlorophyll-a Satellite Observations in the South China Sea and West Philippine Sea. Remote Sensing, 12(3), 480. https://doi.org/10.3390/rs12030480
+* Ji, C., Zhang, Y., Cheng, Q., & Tsou, J. Y. (2021). Investigating ocean surface responses to typhoons using reconstructed satellite data. International Journal of Applied Earth Observation and Geoinformation, 103, 102474. https://doi.org/10.1016/j.jag.2021.102474
+* Jung, S., Yoo, C., & Im, J. (2022). High-Resolution Seamless Daily Sea Surface Temperature Based on Satellite Data Fusion and Machine Learning over Kuroshio Extension. Remote Sensing, 14(3), 575. https://doi.org/10.3390/rs14030575
+* Luo, X., Song, J., Guo, J., Fu, Y., Wang, L. & Cai, Y. (2022). Reconstruction of chlorophyll-a satellite data in Bohai and Yellow sea based on DINCAE method International. Journal of Remote Sensing, 43, 3336-3358. https://doi.org/10.1080/01431161.2022.2090872
+  
 Thank you for citing relevant previous work in DINCAE if you make a scientific publication.
 A bibtex entry can be generated from the DOI by using for example `curl -LH "Accept:  application/x-bibtex"  'https://doi.org/10.5194/gmd-15-2183-2022'`.
 

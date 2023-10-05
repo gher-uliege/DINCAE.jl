@@ -44,3 +44,33 @@ Convolutional neural networks can require "a lot" of GPU memory. These parameter
 * use fewer layers (e.g. `enc_nfilter_internal` = [16,24,36] or [16,24])
 * use less filters (reduce the values of the optional parameter enc_nfilter_internal)
 * use a smaller domain or lower resolution
+
+
+## Troubleshooting
+
+### Installation of cuDNN
+
+If you get the warniong `Package cuDNN not found in current path` or the error `Scalar indexing is disallowed`:
+
+```
+julia> using DINCAE
+┌ Warning: Package cuDNN not found in current path.
+│ - Run `import Pkg; Pkg.add("cuDNN")` to install the cuDNN package, then restart julia.
+│ - If cuDNN is not installed, some Flux functionalities will not be available when running on the GPU.
+```
+
+
+You need to install and load cuDNN before calling a function in DINCAE.jl:
+
+``` julia
+using cuDNN
+using DINCAE
+# ...
+```
+
+### Dependencies of DINCAE.jl
+
+`DINCAE.jl` depends on `Flux.jl` and `CUDA.jl` which will automatically be installed.
+If you have some problems installing these package you might consult the
+[documentation of `Flux.jl`](http://fluxml.ai/Flux.jl/stable/#Installation) or 
+[`CUDA.jl`](https://cuda.juliagpu.org/stable/installation/overview/).

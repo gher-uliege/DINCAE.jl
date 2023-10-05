@@ -1,6 +1,10 @@
+ENV["CUDA_VISIBLE_DEVICES"]=""
+
 using DINCAE
 using NCDatasets
 using Random
+using Test
+using CUDA
 
 T = Float32
 filename = "subset-sla-train.nc"
@@ -50,7 +54,12 @@ skipconnections = start_skip:(length(enc_nfilter_internal)+1)
 fnames_rec = ["data-avg.nc"]
 
 Random.seed!(seed)
-Atype = Array{T}
+Atype =
+    if CUDA.functional()
+        CuArray{T}
+    else
+        Array{T}
+    end
 
 DINCAE.reconstruct_points(
     T,Atype,filename,varname,grid,fnames_rec;

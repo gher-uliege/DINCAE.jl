@@ -7,7 +7,11 @@ using Test
     include("test_DINCAE_SST.jl")
 end
 
-
 @testset "reconstruct point cloud" begin
     include("test_reconstruct_points.jl")
+    include("test_interp_adjoint.jl")
+end
+
+@testset "reconstruct vector field" begin
+    include("test_vector2.jl")
 end

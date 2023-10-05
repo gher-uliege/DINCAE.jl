@@ -24,13 +24,13 @@ function interpnd!(pos::AbstractVector{<:NTuple{N}},A,vec) where N
     #return vec
     return nothing
 end
-
+#=
 function interpnd!(pos::AbstractVector{<:NTuple{N}},A::KnetArray,vec) where N
     cuA = CuArray(A)
     cuvec = CuArray(vec)
     @cuda DINCAE.interpnd!(pos,cuA,cuvec)
 end
-
+=#
 function interpnd!(pos::AbstractVector{<:NTuple{N}},cuA::CuArray,cuvec) where N
     @cuda DINCAE.interpnd!(pos,cuA,cuvec)
 end
@@ -43,9 +43,17 @@ function interpnd(pos,A)
     return vec
 end
 
+#Knet.AutoGrad.@primitive interpnd(pos,A),dy,y 0 interp_adjn(pos,dy,size(A))
 
-
-Knet.AutoGrad.@primitive interpnd(pos,A),dy,y 0 interp_adjn(pos,dy,size(A))
+function ChainRulesCore.rrule(::typeof(interpnd), pos::AbstractVector{<:NTuple{N}}, A) where N
+    function interpnd_pullback(dy)
+        dpos = similar(pos)
+        fill!(dpos,ntuple(i -> 0,N))
+        dA = interp_adjn(pos,dy,size(A))
+        return (NoTangent(),dpos,dA)
+    end
+    return interpnd(pos,A), interpnd_pullback
+end
 
 """
         all positions should be within the domain. exclusive upper bound
@@ -72,16 +80,16 @@ function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
         end
     end
 
-    #return A2
     return nothing
 end
 
-
+#=
 function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values::KnetArray,A2) where N
     cuvalues = CuArray(values)
     cuA2 = CuArray(A2)
     @cuda interp_adjn!(pos,cuvalues,cuA2)
 end
+=#
 
 function interp_adjn!(pos::AbstractVector{<:NTuple{N}},cuvalues::CuArray,cuA2) where N
     @cuda interp_adjn!(pos,cuvalues,cuA2)
@@ -329,17 +337,8 @@ function getxy!(d::PointCloud{Atype,T,N},ind,xin,xtrue) where {Atype,T,N}
     return (xin,xtrue)
 end
 
-
-function _to_device(::Type{Atype},pos) where Atype <: Union{KnetArray,CuArray}
-    return cu(pos)
-end
-
-function _to_device(::Type{Atype},pos) where Atype
-    return pos
-end
-
-
 function Base.iterate(d::PointCloud{Atype,T,N},index = 0) where {Atype,T,N}
+    device = _to_device(Atype)
 
     sz = sizex(d)
     ntime = length(d.x)
@@ -363,7 +362,7 @@ function Base.iterate(d::PointCloud{Atype,T,N},index = 0) where {Atype,T,N}
     #@show index
     return ((Atype(xin),
              #map(xt -> (pos = xt.pos, x = Atype(xt.x)),xtrue)),bs[end])
-             map(xt -> (pos = _to_device(Atype,xt.pos), x = Atype(xt.x)),xtrue)),bs[end])
+             map(xt -> (pos = device(xt.pos), x = Atype(xt.x)),xtrue)),bs[end])
              #map(xt -> (pos = cu(xt.pos), x = Atype(xt.x)),xtrue)),bs[end])
 
 end
@@ -377,12 +376,11 @@ function DINCAE.sizex(d::PointCloud)
     return (sz[1],sz[2],nvar)
 end
 
-
-
-#function (model::DINCAE.Model)(xin,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}}) where TA <: Union{Array{T,N},KnetArray{T,N}} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
-
-#    xrec = model(xin)
-function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth_uncertain) where TA <: Union{Array{T,N},KnetArray{T,N}} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
+function costfun(
+    xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth_uncertain;
+    laplacian_penalty = 0,
+    laplacian_error_penalty = laplacian_penalty,
+    ) where TA <: Union{Array{T,N},CuArray{T,N}#=,KnetArray{T,N}=#} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
 
     #@show typeof(xin)
     #@show typeof(xrec)
@@ -393,7 +391,7 @@ function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth
     #xrec
 
     ibatch = 1
-
+#=
     #xrec_interp = Vector{Atype{2}}(undef,batch_size)
     xrec_interp = Vector{Any}(undef,batch_size)
 
@@ -422,6 +420,11 @@ function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth
             hcat(interpnd(xtrue[ibatch].pos,xrec[:,:,1,ibatch]),
                  interpnd(xtrue[ibatch].pos,xrec[:,:,2,ibatch]))
     end
+=#
+    xrec_interp = [
+            hcat(interpnd(xtrue[ibatch].pos,xrec[:,:,1,ibatch]),
+                 interpnd(xtrue[ibatch].pos,xrec[:,:,2,ibatch]))
+            for ibatch = 1:batch_size]
 
     xrec_interp2 = reduce(vcat,xrec_interp)
 
@@ -432,7 +435,21 @@ function costfun(xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth
     xtrue_interp2 = reduce(vcat,map(xt -> xt.x,xtrue))
     cost = DINCAE.costfun(xrec_interp2[:,:,1:1],xtrue_interp2[:,:,1:1],truth_uncertain)
 
-    return cost
+    if (laplacian_penalty != 0) || (laplacian_error_penalty != 0)
+        allst = ntuple(i -> :, N-2)
+        m_rec = xrec[allst...,1:1,:]
+        σ2_rec = xrec[allst...,2:2,:]
+
+        σ2_true = sinv(xtrue[allst...,2:2,:])
+        m_true = xtrue[allst...,1:1,:] .* σ2_true
+
+        return (cost
+                + sum_laplacian_penalty(laplacian_penalty,m_rec)
+                + sum_laplacian_penalty(laplacian_error_penalty,σ2_rec))
+
+    else
+        return cost
+    end
 end
 
 
@@ -474,7 +491,7 @@ Optional parameters:
 * `jitter_std_pos`: standard deviation of the noise to be added to the position of the observations (default `(5,5)`)
 * `auxdata_files`: gridded auxiliary data file for a multivariate reconstruction. `auxdata_files` is an array of named tuples with the fields (`filename`, the file name of the NetCDF file, `varname` the NetCDF name of the primary variable and `errvarname` the NetCDF name of the expected standard deviation error). For example:
 * `probability_skip_for_training`: For a given time step n, every track from the same time step n will be skipped by this probability during training (default 0.2). This does not affect the tracks from previous (n-1,n-2,..) and following time steps (n+1,n+2,...). The goal of this parameter is to force the neural network to learn to interpolate the data in time.
-				
+
 ```
 auxdata_files = [
   (filename = "big-sst-file.nc"),
@@ -534,6 +551,8 @@ function reconstruct_points(
     loss_weights_refine = (1.,),
     auxdata_files = [],
     savesnapshot = false,
+    laplacian_penalty = 0,
+    laplacian_error_penalty = laplacian_penalty,
 )
 
     if isempty(save_epochs) || epochs < minimum(save_epochs)
@@ -575,38 +594,38 @@ function reconstruct_points(
     @info "number of variables: $nvar"
     gamma = log(min_std_err^(-2))
     @info "gamma: $gamma"
+    noutput = 1
 
     enc_nfilter = vcat([nvar],enc_nfilter_internal)
+    dec_nfilter = vcat([2*noutput],enc_nfilter_internal)
 
     if loss_weights_refine == (1.,)
         println("no refine")
-        noutput = 1
-        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,skipconnections; method = upsampling_method) ,)
-        model = DINCAE.StepModel(steps,noutput,loss_weights_refine,truth_uncertain,gamma,
-                                 regularization_L1_beta,regularization_L2_beta)
-
-        #model = DINCAE.Model(DINCAE.recmodel_bn(sz[1:2],enc_nfilter; method = upsampling_method),truth_uncertain)
-        #model = DINCAE.Model(DINCAE.recmodel_noskip(sz[1:2],enc_nfilter; method = upsampling_method),truth_uncertain)
+        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method) ,)
     else
         enc_nfilter2 = copy(enc_nfilter)
-        enc_nfilter2[1] += 2
-        @show enc_nfilter,enc_nfilter2
-        @show loss_weights_refine
+        enc_nfilter2[1] += dec_nfilter[1]
+        dec_nfilter2 = copy(enc_nfilter2)
 
-        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,skipconnections; method = upsampling_method),
-                 DINCAE.recmodel4(sz[1:2],enc_nfilter2,skipconnections; method = upsampling_method))
-
-        #model1 = DINCAE.Model(chain1,truth_uncertain)
-        #model2
-        model = StepModel(steps,loss_weights_refine,truth_uncertain,gamma,
-                          regularization_L1_beta,regularization_L2_beta)
+        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
+                 DINCAE.recmodel4(sz[1:2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
     end
+    model = StepModel(
+        steps,loss_weights_refine,truth_uncertain,gamma;
+        regularization_L1 = regularization_L1_beta,
+        regularization_L2 = regularization_L2_beta,
+        laplacian_penalty = laplacian_penalty,
+        laplacian_error_penalty = laplacian_error_penalty,
+    )
+
+    device = _to_device(Atype)
+
+    model = model |> device
 
     #=
     i = 5
     scatter(lon[i],lat[i],1,sla[i])
     =#
-
 
     xin,xtrue = first(train)
 
@@ -615,7 +634,11 @@ function reconstruct_points(
     @show size(model(xin))
     @show sz
     # test loss function
-    @show model(xin,xtrue)
+    #@show model(xin,xtrue)
+    @debug "size of input (xin)" size(xin)
+    @debug "size of xtrue " size(xtrue)
+
+    @show loss_function(model,xin,xtrue)
 
     losses = []
 
@@ -625,7 +648,9 @@ function reconstruct_points(
     end
 
     meandata = zeros(sz[1:2]);
-    ds = ncsetup(fname_rec,varname,grid[1],grid[2],meandata)
+    ds = ncsetup(fname_rec,[varname],(grid[1],grid[2]),meandata)
+
+    MO = train_init(model,:ADAM; clip_grad = clip_grad, learning_rate = learning_rate)
 
     @time for e = 1:epochs
         #@time @profile for e = 1:epochs
@@ -633,31 +658,28 @@ function reconstruct_points(
 
         lr = learning_rate * 0.5^(e / learning_rate_decay_epoch)
 
-        # loop over training datasets
-        for (ii,loss) in enumerate(adam(model, train; gclip = clip_grad, lr = lr))
-            push!(losses,loss)
+        loss_avg = train_epoch!(MO,train,lr;
+                                clip_grad = clip_grad)
 
-            if (ii-1) % 20 == 0
-                println("epoch: $(@sprintf("%5d",e )) loss $(@sprintf("%5.4f",loss)) $lr")
-                flush(stdout)
-            end
-        end
+        push!(losses,loss_avg)
+        println("epoch: $(@sprintf("%5d",e )) loss $(@sprintf("%5.4f",losses[end]))")
+        flush(stdout)
 
         if e ∈ save_epochs
             println("Save output $e")
 
             if savesnapshot
                 fname_rec_snapshot = replace(fname_rec,".nc" => "-epoch$(@sprintf("%05d",e )).nc")
-                ds_snapshot = ncsetup(fname_rec_snapshot,varname,grid[1],grid[2],meandata)
+                ds_snapshot = ncsetup(fname_rec_snapshot,[varname],(grid[1],grid[2]),meandata)
             end
 
             @time for (ii,(inputs_,xtrue)) in enumerate(data_iter[2])
                 xrec = Array(model(inputs_))
                 offset = (ii-1)*batch_size
-                ncsavesample(ds,varname,xrec,meandata,ii-1,offset)
+                savesample(ds,[varname],xrec,meandata,ii-1,offset)
 
                 if savesnapshot
-                    ncsavesample(ds_snapshot,varname,xrec,meandata,ii-1,offset)
+                    savesample(ds_snapshot,[varname],xrec,meandata,ii-1,offset)
                 end
             end
 
