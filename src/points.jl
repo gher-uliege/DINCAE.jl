@@ -491,7 +491,7 @@ Optional parameters:
 * `jitter_std_pos`: standard deviation of the noise to be added to the position of the observations (default `(5,5)`)
 * `auxdata_files`: gridded auxiliary data file for a multivariate reconstruction. `auxdata_files` is an array of named tuples with the fields (`filename`, the file name of the NetCDF file, `varname` the NetCDF name of the primary variable and `errvarname` the NetCDF name of the expected standard deviation error). For example:
 * `probability_skip_for_training`: For a given time step n, every track from the same time step n will be skipped by this probability during training (default 0.2). This does not affect the tracks from previous (n-1,n-2,..) and following time steps (n+1,n+2,...). The goal of this parameter is to force the neural network to learn to interpolate the data in time.
-
+* `paramfile`: the path of the file (netCDF) where the parameter values are stored (default: `nothing`).
 ```
 auxdata_files = [
   (filename = "big-sst-file.nc"),
@@ -550,6 +550,7 @@ function reconstruct_points(
     min_std_err = 0.006737946999085467,
     loss_weights_refine = (1.,),
     auxdata_files = [],
+    paramfile = nothing,
     savesnapshot = false,
     laplacian_penalty = 0,
     laplacian_error_penalty = laplacian_penalty,
@@ -640,7 +641,7 @@ function reconstruct_points(
 
     @show loss_function(model,xin,xtrue)
 
-    losses = []
+    losses = Float64[]
 
 
     if isfile(fname_rec)
@@ -691,4 +692,37 @@ function reconstruct_points(
         end
     end
     close(ds)
+
+    # Write analysis parameters in a file
+    if paramfile !== nothing
+        NCDataset(paramfile,"c") do ds_
+            defVar(ds_,"losses",losses,("epochs",))
+            ds_.attrib["epochs"] = epochs
+            ds_.attrib["batch_size"] = batch_size
+            ds_.attrib["truth_uncertain"] = Int(truth_uncertain)
+            ds_.attrib["enc_nfilter_internal"] = Vector{Int}(collect(enc_nfilter_internal))
+            ds_.attrib["skipconnections"] = Vector{Int}(collect(skipconnections))
+            ds_.attrib["clip_grad"] = clip_grad
+            ds_.attrib["regularization_L1_beta"] = regularization_L1_beta
+            ds_.attrib["regularization_L2_beta"] = regularization_L2_beta
+            ds_.attrib["save_epochs"] = Vector{Int}(save_epochs)
+            ds_.attrib["upsampling_method"] = string(upsampling_method)
+            ds_.attrib["probability_skip_for_training"] = probability_skip_for_training
+            ds_.attrib["jitter_std_pos"] = Vector{Float64}(collect(jitter_std_pos))
+            ds_.attrib["ntime_win"] = ntime_win
+            ds_.attrib["learning_rate"] = learning_rate
+            ds_.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
+            ds_.attrib["min_std_err"] = min_std_err
+            ds_.attrib["loss_weights_refine"] = Vector{Float64}(collect(loss_weights_refine))
+            ds_.attrib["auxdata_files"] = Vector{String}(collect(auxdata_files))
+            ds_.attrib["savesnapshot"] = Int(savesnapshot)
+            ds_.attrib["laplacian_penalty"] = laplacian_penalty
+            ds_.attrib["laplacian_error_penalty"] = laplacian_error_penalty
+        end
+    end
+
+    # Write 
+    return losses
 end
+
+
