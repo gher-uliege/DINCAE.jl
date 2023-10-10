@@ -9,6 +9,7 @@ end
 
 @testset "reconstruct point cloud" begin
     include("test_reconstruct_points.jl")
+    include("test_reconstruct_points_laplacian.jl")
     include("test_interp_adjoint.jl")
 end
 

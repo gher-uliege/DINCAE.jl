@@ -436,12 +436,9 @@ function costfun(
     cost = DINCAE.costfun(xrec_interp2[:,:,1:1],xtrue_interp2[:,:,1:1],truth_uncertain)
 
     if (laplacian_penalty != 0) || (laplacian_error_penalty != 0)
-        allst = ntuple(i -> :, N-2)
+        allst = ntuple(i -> :, N+1)
         m_rec = xrec[allst...,1:1,:]
         σ2_rec = xrec[allst...,2:2,:]
-
-        σ2_true = sinv(xtrue[allst...,2:2,:])
-        m_true = xtrue[allst...,1:1,:] .* σ2_true
 
         return (cost
                 + sum_laplacian_penalty(laplacian_penalty,m_rec)
@@ -721,8 +718,6 @@ function reconstruct_points(
         end
     end
 
-    # Write 
+    # Write
     return losses
 end
-
-
