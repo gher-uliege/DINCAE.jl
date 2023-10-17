@@ -711,7 +711,7 @@ function reconstruct_points(
             ds_.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
             ds_.attrib["min_std_err"] = min_std_err
             ds_.attrib["loss_weights_refine"] = Vector{Float64}(collect(loss_weights_refine))
-            ds_.attrib["auxdata_files"] = Vector{String}(collect(auxdata_files))
+            # ds_.attrib["auxdata_files"] = Vector{String}(collect(auxdata_files))
             ds_.attrib["savesnapshot"] = Int(savesnapshot)
             ds_.attrib["laplacian_penalty"] = laplacian_penalty
             ds_.attrib["laplacian_error_penalty"] = laplacian_error_penalty
