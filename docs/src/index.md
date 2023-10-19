@@ -15,8 +15,9 @@ The method is described in the following articles:
 * Barth, A., Alvera-Azcárate, A., Troupin, C., & Beckers, J.-M. (2022). DINCAE 2.0: multivariate convolutional neural network with error estimates to reconstruct sea surface temperature satellite and altimetry observations. Geoscientific Model Development, 15(5), 2183–2196. https://doi.org/10.5194/gmd-15-2183-2022
 
 The neural network will be trained on the GPU. Note convolutional neural networks can require a lot of GPU memory depending on the domain size. 
-So far, only NVIDIA GPUs are supported by the neural network framework `Knet.jl` used in DINCAE (beside training on the CPU but which is prohibitively slow).
-
+# So far, only NVIDIA GPUs are supported by the neural network framework `Knet.jl` used in DINCAE (beside training on the CPU but which is prohibitively slow).
+[`Flux.jl`](https://github.com/FluxML/Flux.jl) supports NVIDIA GPUs as well as other brands (see https://fluxml.ai/Flux.jl/stable/gpu/ for details).     
+Training on the CPU can be performed but it is prohibitively slow.
 
 ## User API
 
@@ -43,7 +44,7 @@ Convolutional neural networks can require "a lot" of GPU memory. These parameter
 * reduce the mini-batch size
 * use fewer layers (e.g. `enc_nfilter_internal` = [16,24,36] or [16,24])
 * use less filters (reduce the values of the optional parameter enc_nfilter_internal)
-* use a smaller domain or lower resolution
+* use a smaller domain or a lower resolution
 
 
 ## Troubleshooting
@@ -52,7 +53,7 @@ Convolutional neural networks can require "a lot" of GPU memory. These parameter
 
 If you get the warniong `Package cuDNN not found in current path` or the error `Scalar indexing is disallowed`:
 
-```
+```julia
 julia> using DINCAE
 ┌ Warning: Package cuDNN not found in current path.
 │ - Run `import Pkg; Pkg.add("cuDNN")` to install the cuDNN package, then restart julia.
@@ -62,7 +63,7 @@ julia> using DINCAE
 
 You need to install and load cuDNN before calling a function in DINCAE.jl:
 
-``` julia
+```julia
 using cuDNN
 using DINCAE
 # ...

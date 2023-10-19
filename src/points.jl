@@ -712,7 +712,7 @@ function reconstruct_points(
             ds_.attrib["min_std_err"] = min_std_err
             ds_.attrib["loss_weights_refine"] = Vector{Float64}(collect(loss_weights_refine))
             ds_.attrib["auxdata_filenames"] =  getindex.(auxdata_files,:filename)
-	        ds_.attrib["auxdata_varnames"] =  getindex.(auxdata_files,:varname)
+            ds_.attrib["auxdata_varnames"] =  getindex.(auxdata_files,:varname)
             ds_.attrib["auxdata_errvarname"] =  getindex.(auxdata_files,:errvarname)
             ds_.attrib["savesnapshot"] = Int(savesnapshot)
             ds_.attrib["laplacian_penalty"] = laplacian_penalty
@@ -720,6 +720,5 @@ function reconstruct_points(
         end
     end
 
-    # Write
     return losses
 end
