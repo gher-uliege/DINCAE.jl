@@ -22,7 +22,7 @@ ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 CUDA = "3.8, 4"
 ChainRulesCore = "1"
 Flux = "0.14"
-NCDatasets = "0.11, 0.12"
+NCDatasets = "0.11, 0.12, 0.13"
 ThreadsX = "0.1"
 julia = "1"
 
