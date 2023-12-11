@@ -546,7 +546,7 @@ function reconstruct_points(
     learning_rate_decay_epoch = Inf,
     min_std_err = 0.006737946999085467,
     loss_weights_refine = (1.,),
-    auxdata_files = [],
+    auxdata_files = [(filename = "", varname = "", errvarname = "")],
     paramfile = nothing,
     savesnapshot = false,
     laplacian_penalty = 0,
@@ -711,9 +711,9 @@ function reconstruct_points(
             ds_.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
             ds_.attrib["min_std_err"] = min_std_err
             ds_.attrib["loss_weights_refine"] = Vector{Float64}(collect(loss_weights_refine))
-            ds_.attrib["auxdata_filenames"] =  getindex.(auxdata_files,:filename)
-            ds_.attrib["auxdata_varnames"] =  getindex.(auxdata_files,:varname)
-            ds_.attrib["auxdata_errvarname"] =  getindex.(auxdata_files,:errvarname)
+            ds_.attrib["auxdata_filenames"] = getindex.(auxdata_files,:filename)
+            ds_.attrib["auxdata_varnames"] = getindex.(auxdata_files,:varname)
+            ds_.attrib["auxdata_errvarname"] = getindex.(auxdata_files,:errvarname)
             ds_.attrib["savesnapshot"] = Int(savesnapshot)
             ds_.attrib["laplacian_penalty"] = laplacian_penalty
             ds_.attrib["laplacian_error_penalty"] = laplacian_error_penalty
