@@ -39,7 +39,7 @@ function load_gridded_nc(fname::AbstractString,varname::AbstractString; minfrac 
     #time = nomissing(ds["time"][1:100])
     #data = nomissing(ds[varname][:,:,1:100],NaN)
 
-    if "mask" in ds
+    if haskey(ds,"mask")
         mask = nomissing(ds["mask"][:,:]) .== 1;
     else
         @info("compute mask from $varname: each sea point should have at least " *
@@ -47,9 +47,9 @@ function load_gridded_nc(fname::AbstractString,varname::AbstractString; minfrac 
 
         missingfraction = mean(isnan.(data),dims=3)
         println("range of fraction of missing data: ",extrema(missingfraction))
-        mask = missingfraction .> minfrac
+        mask = missingfraction .<= 1 - minfrac
 
-        println("mask: sea points ",sum(.!mask)," land points ",sum(mask))
+        println("mask: sea points ",sum(mask)," land points ",sum(.!mask))
     end
 
     close(ds)

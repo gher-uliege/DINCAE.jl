@@ -12,7 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
-          sudo apt-get install python3-matplotlib
+          sudo apt update
+          sudo apt install python3-matplotlib
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-docdeploy@latest
         env:
