@@ -436,13 +436,14 @@ function costfun(
     cost = DINCAE.costfun(xrec_interp2[:,:,1:1],xtrue_interp2[:,:,1:1],truth_uncertain)
 
     if (laplacian_penalty != 0) || (laplacian_error_penalty != 0)
-        allst = ntuple(i -> :, N+1)
+        allst = ntuple(i -> :, N)
         m_rec = xrec[allst...,1:1,:]
         σ2_rec = xrec[allst...,2:2,:]
 
         return (cost
                 + sum_laplacian_penalty(laplacian_penalty,m_rec)
-                + sum_laplacian_penalty(laplacian_error_penalty,σ2_rec))
+                + sum_laplacian_penalty(laplacian_error_penalty,σ2_rec)
+                )
 
     else
         return cost
