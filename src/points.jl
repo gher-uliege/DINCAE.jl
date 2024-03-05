@@ -490,6 +490,9 @@ Optional parameters:
 * `auxdata_files`: gridded auxiliary data file for a multivariate reconstruction. `auxdata_files` is an array of named tuples with the fields (`filename`, the file name of the NetCDF file, `varname` the NetCDF name of the primary variable and `errvarname` the NetCDF name of the expected standard deviation error). For example:
 * `probability_skip_for_training`: For a given time step n, every track from the same time step n will be skipped by this probability during training (default 0.2). This does not affect the tracks from previous (n-1,n-2,..) and following time steps (n+1,n+2,...). The goal of this parameter is to force the neural network to learn to interpolate the data in time.
 * `paramfile`: the path of the file (netCDF) where the parameter values are stored (default: `nothing`).
+
+For example, a single entry of `auxdata_files` could be:
+
 ```
 auxdata_files = [
   (filename = "big-sst-file.nc"),
@@ -497,7 +500,7 @@ auxdata_files = [
    errvarname = "SST_error")]
 ```
 
-The data in the file should already be interpolated on the targed grid. The file structure of the NetCDF file is described in `DINCAE.load_gridded_nc`.
+The data in the file should already be interpolated on the targed grid. The file structure of the NetCDF file is described in `DINCAE.load_gridded_nc`. The fields defined in this file should not have any missing value (see DIVAnd.ufill).
 
 See `DINCAE.reconstruct` for other optional parameters.
 
