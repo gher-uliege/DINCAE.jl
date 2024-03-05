@@ -16,3 +16,7 @@ end
 @testset "reconstruct vector field" begin
     include("test_vector2.jl")
 end
+
+@testset "utilities" begin
+    include("test_utils.jl")
+end
