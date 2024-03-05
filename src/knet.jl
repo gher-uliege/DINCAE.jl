@@ -1,3 +1,4 @@
+# COV_EXCL_START
 using Knet
 
 # upsampling
@@ -226,3 +227,4 @@ end
 @inline function _to_device(::Type{Atype}) where Atype <: AbstractArray
     return identity
 end
+# COV_EXCL_STOP
