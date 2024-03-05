@@ -317,10 +317,10 @@ function getxy!(d::PointCloud{Atype,T,N},ind,xin,xtrue) where {Atype,T,N}
                         sel[d.id[ind] .== uid] .= false
                     end
                 end
-
                 # at least one track should be there
                 if sum(sel) == 0
-                    sel[d.id[ind] .== rand(unique_id)] .= true
+                    rand_unique_id = rand(unique_id)
+                    sel[d.id[ind] .== rand_unique_id] .= true
                 end
             end
 
