@@ -52,6 +52,7 @@ enc_nfilter_internal = [25,50,75]
 skipconnections = start_skip:(length(enc_nfilter_internal)+1)
 
 fnames_rec = ["data-avg.nc"]
+paramfile = tempname()
 
 Random.seed!(seed)
 Atype =
@@ -80,6 +81,7 @@ DINCAE.reconstruct_points(
     regularization_L1_beta = regularization_L1_beta,
     regularization_L2_beta = regularization_L2_beta,
     loss_weights_refine = loss_weights_refine,
+    paramfile = paramfile,
 )
 
 
@@ -92,6 +94,11 @@ NCDataset(fnames_rec[1]) do ds
     @test size(ds[varname],2)  == length(latr)
 end
 
+@test isfile(paramfile)
+
+NCDataset(paramfile) do ds
+    @test ds.attrib["epochs"] == epochs
+end
 
 
 @test_throws Exception DINCAE.reconstruct_points(
