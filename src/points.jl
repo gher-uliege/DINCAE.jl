@@ -711,13 +711,21 @@ function reconstruct_points(
             ds_.attrib["learning_rate_decay_epoch"] = learning_rate_decay_epoch
             ds_.attrib["min_std_err"] = min_std_err
             ds_.attrib["loss_weights_refine"] = Vector{Float64}(collect(loss_weights_refine))
-            ds_.attrib["auxdata_files"] = Vector{String}(collect(auxdata_files))
+            if length(auxdata_files) > 0
+                ds_.attrib["auxdata_filenames"] = getindex.(auxdata_files,:filename)
+                ds_.attrib["auxdata_varnames"] = getindex.(auxdata_files,:varname)
+                ds_.attrib["auxdata_errvarname"] = getindex.(auxdata_files,:errvarname)
+            else 
+                @debug("No auxiliary data files")
+                ds_.attrib["auxdata_filenames"] = ""
+                ds_.attrib["auxdata_varnames"] = ""
+                ds_.attrib["auxdata_errvarname"] = ""
+            end
             ds_.attrib["savesnapshot"] = Int(savesnapshot)
             ds_.attrib["laplacian_penalty"] = laplacian_penalty
             ds_.attrib["laplacian_error_penalty"] = laplacian_error_penalty
         end
     end
 
-    # Write
     return losses
 end

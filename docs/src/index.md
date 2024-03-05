@@ -11,12 +11,13 @@ The code is available at:
 
 The method is described in the following articles:
 
-* Barth, A., Alvera-Azcárate, A., Licer, M., & Beckers, J.-M. (2020). DINCAE 1.0: a convolutional neural network with error estimates to reconstruct sea surface temperature satellite observations. Geoscientific Model Development, 13(3), 1609–1622. https://doi.org/10.5194/gmd-13-1609-2020
+* Barth, A., Alvera-Azcárate, A., Ličer, M., & Beckers, J.-M. (2020). DINCAE 1.0: a convolutional neural network with error estimates to reconstruct sea surface temperature satellite observations. Geoscientific Model Development, 13(3), 1609–1622. https://doi.org/10.5194/gmd-13-1609-2020
 * Barth, A., Alvera-Azcárate, A., Troupin, C., & Beckers, J.-M. (2022). DINCAE 2.0: multivariate convolutional neural network with error estimates to reconstruct sea surface temperature satellite and altimetry observations. Geoscientific Model Development, 15(5), 2183–2196. https://doi.org/10.5194/gmd-15-2183-2022
 
 The neural network will be trained on the GPU. Note convolutional neural networks can require a lot of GPU memory depending on the domain size. 
-So far, only NVIDIA GPUs are supported by the neural network framework `Knet.jl` used in DINCAE (beside training on the CPU but which is prohibitively slow).
-
+# So far, only NVIDIA GPUs are supported by the neural network framework `Knet.jl` used in DINCAE (beside training on the CPU but which is prohibitively slow).
+[`Flux.jl`](https://github.com/FluxML/Flux.jl) supports NVIDIA GPUs as well as other brands (see https://fluxml.ai/Flux.jl/stable/gpu/ for details).     
+Training on the CPU can be performedi, but it is prohibitively slow.
 
 ## User API
 
@@ -43,16 +44,16 @@ Convolutional neural networks can require "a lot" of GPU memory. These parameter
 * reduce the mini-batch size
 * use fewer layers (e.g. `enc_nfilter_internal` = [16,24,36] or [16,24])
 * use less filters (reduce the values of the optional parameter enc_nfilter_internal)
-* use a smaller domain or lower resolution
+* use a smaller domain or a lower resolution
 
 
 ## Troubleshooting
 
 ### Installation of cuDNN
 
-If you get the warniong `Package cuDNN not found in current path` or the error `Scalar indexing is disallowed`:
+If you get the warning `Package cuDNN not found in current path` or the error `Scalar indexing is disallowed`:
 
-```
+```julia
 julia> using DINCAE
 ┌ Warning: Package cuDNN not found in current path.
 │ - Run `import Pkg; Pkg.add("cuDNN")` to install the cuDNN package, then restart julia.
@@ -60,9 +61,9 @@ julia> using DINCAE
 ```
 
 
-You need to install and load cuDNN before calling a function in DINCAE.jl:
+You need to install and load cuDNN before calling a function in `DINCAE.jl`:
 
-``` julia
+```julia
 using cuDNN
 using DINCAE
 # ...
@@ -70,7 +71,7 @@ using DINCAE
 
 ### Dependencies of DINCAE.jl
 
-`DINCAE.jl` depends on `Flux.jl` and `CUDA.jl` which will automatically be installed.
+`DINCAE.jl` depends on `Flux.jl` and `CUDA.jl`, which will automatically be installed.
 If you have some problems installing these package you might consult the
 [documentation of `Flux.jl`](http://fluxml.ai/Flux.jl/stable/#Installation) or 
 [`CUDA.jl`](https://cuda.juliagpu.org/stable/installation/overview/).
