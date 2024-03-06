@@ -542,6 +542,9 @@ function reconstruct(Atype,data_all,fnames_rec;
                     )
                 end
             end
+
+            # reduce the risk for memory leaks
+            GC.gc()
         end
 
         shuffle!(train)
