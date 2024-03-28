@@ -160,7 +160,7 @@ struct StepModel{F1,F2}
     costfun::F2
 end
 
-weights(model::StepModel) = reduce(vcat,weights.(model.chains))
+weights(model::StepModel) = Iterators.flatten(weights.(model.chains))
 
 function StepModel(
     chains,loss_weights,truth_uncertain,gamma;
