@@ -98,13 +98,13 @@ function load_aux_data(T,sz,auxdata_files)
 
     for i = 1:length(auxdata_files)
         NCDataset(auxdata_files[i].filename) do ds
-            data = nomissing(ds[auxdata_files[i].varname][:,:,:])
+            data = nomissing(Array(ds[auxdata_files[i].varname]))
 
             data_std_err =
                 if isnothing(auxdata_files[i].errvarname)
                     ones(size(data))
                 else
-                    nomissing(ds[auxdata_files[i].errvarname][:,:,:])
+                    nomissing(Array(ds[auxdata_files[i].errvarname]))
                 end
 
             @info("remove time mean from $(auxdata_files[i].filename)")
