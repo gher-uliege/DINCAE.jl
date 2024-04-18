@@ -49,6 +49,10 @@ save_epochs = [epochs]
 is3D = false
 ntime_win = 3
 
+#=
+(upsampling_method,is3D,truth_uncertain,loss_weights_refine) = (:nearest, false,false, (1.,))
+=#
+
 for (upsampling_method,is3D,truth_uncertain,loss_weights_refine) = (
     (:nearest, false,false, (1.,)),
     (:bilinear,false,false, (1.,)),

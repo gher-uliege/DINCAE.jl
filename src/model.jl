@@ -300,9 +300,7 @@ satellite data).
 ## Mandatory parameters
 
 * `Atype`: array type to use
-* `data_all`: list of named tuples. Every tuple should have `filename` and `varname`.
-`data_all[1]` will be used for training (and perturbed to prevent overfitting).
-All others entries `data_all[2:end]` will be reconstructed using the training network
+* `data_all`: list of named tuples. Every tuple should have `filename` and `varname`. `data_all[1]` will be used for training (and perturbed to prevent overfitting). All others entries `data_all[2:end]` will be reconstructed using the training network
 at the epochs defined by `save_epochs`.
 * `fnames_rec`: vector of filenames corresponding to the entries `data_all[2:end]`
 
@@ -322,13 +320,15 @@ at the epochs defined by `save_epochs`.
  * `learning_rate`: initial learning rate of the ADAM optimizer (default `0.001`)
  * `learning_rate_decay_epoch`: the exponential decay rate of the learning rate. After `learning_rate_decay_epoch` the learning rate is halved. The learning rate is computed as  `learning_rate * 0.5^(epoch / learning_rate_decay_epoch)`. `learning_rate_decay_epoch` can be `Inf` for a constant learning rate (default)
  * `min_std_err`: minimum error standard deviation preventing a division close to zero (default `exp(-5) = 0.006737946999085467`)
- * `loss_weights_refine`: the weigh of the individual refinement layers using in the cost function. 
-If `loss_weights_refine` has a single element, then there is no refinement.  (default `(1.,)`)
+ * `loss_weights_refine`: the weigh of the individual refinement layers using in the cost function. If `loss_weights_refine` has a single element, then there is no refinement.  (default `(1.,)`)
 
 
 !!! note
     Note that also the optional parameters should be to tuned for a particular
     application.
+
+
+See `DINCAE.load_gridded_nc` for more information about the netCDF file.
 """
 function reconstruct(Atype,data_all,fnames_rec;
                      epochs = 1000,

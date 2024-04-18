@@ -28,6 +28,8 @@ attributes:
                     SST:_FillValue = -9999.f ;
     }
 
+
+The the netCDF mask is 0 for invalid (e.g. land for an ocean application) and 1 for pixels (e.g. ocean).
 """
 function load_gridded_nc(fname::AbstractString,varname::AbstractString; minfrac = 0.05)
     ds = Dataset(fname);
