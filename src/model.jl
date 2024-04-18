@@ -328,6 +328,10 @@ at the epochs defined by `save_epochs`.
     application.
 
 
+Internally the time mean is removed (per default) from the data before it is reconstructed.
+The time mean is also added back when the file is saved.
+However, the mean is undefined for for are pixels in the data defined as valid (sea) by the mask which do not have any valid data in the training dataset.
+
 See `DINCAE.load_gridded_nc` for more information about the netCDF file.
 """
 function reconstruct(Atype,data_all,fnames_rec;
@@ -533,12 +537,13 @@ function reconstruct(Atype,data_all,fnames_rec;
 
                     offset = (ii-1)*batch_size
 
-                    DINCAE.savesample(
+                    savesample(
                         ds_,
                         output_varnames,xrec,
                         train_data.meandata[:,:,findall(train_data.isoutput)],
                         ii-1,offset,
                         output_ndims = output_ndims,
+                        mask = train_data.mask,
                     )
                 end
             end
