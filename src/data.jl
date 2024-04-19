@@ -64,7 +64,7 @@ function load_gridded_nc(fname::AbstractString,varname::AbstractString, errvarna
     data4d = reshape(data,(sz[1],sz[2],1,sz[3]))
 
     if !isnothing(errvarname)
-        error4d = reshape(nomissing(ds[errvarname][:,:,:],NaN),(sz[1],sz[2],1,sz[3]))
+        error4d = reshape(nomissing(ds[errvarname][:,:,:],Inf),(sz[1],sz[2],1,sz[3]))
     else
         @info("no error field provided using $obs_err_std as error standard dev.")
         error4d = fill(obs_err_std,(sz[1],sz[2],1,sz[3]))
