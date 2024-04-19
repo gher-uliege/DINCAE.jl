@@ -54,7 +54,6 @@ function load_gridded_nc(fname::AbstractString,varname::AbstractString, errornam
         println("mask: sea points ",sum(mask)," land points ",sum(.!mask))
     end
 
-    close(ds)
     missingmask = isnan.(data)
     sz = size(data)
 
@@ -69,6 +68,7 @@ function load_gridded_nc(fname::AbstractString,varname::AbstractString, errornam
         error4d = fill(obs_err_std,(sz[1],sz[2],1,sz[3]))
     end
 
+    close(ds)
     return lon,lat,time,data4d,error4d,missingmask,mask
 end
 
