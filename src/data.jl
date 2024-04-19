@@ -31,7 +31,9 @@ attributes:
 
 The the netCDF mask is 0 for invalid (e.g. land for an ocean application) and 1 for pixels (e.g. ocean).
 """
-function load_gridded_nc(fname::AbstractString,varname::AbstractString, errorname; minfrac = 0.05, obs_err_std = 1f0)
+function load_gridded_nc(fname::AbstractString,varname::AbstractString, errvarname; minfrac = 0.05, obs_err_std = 1f0)
+
+    @info "loading file $fname"
     ds = Dataset(fname);
     lon = nomissing(ds["lon"][:])
     lat = nomissing(ds["lat"][:])
@@ -61,8 +63,8 @@ function load_gridded_nc(fname::AbstractString,varname::AbstractString, errornam
 
     data4d = reshape(data,(sz[1],sz[2],1,sz[3]))
 
-    if !isnothing(errorname)
-        error4d = reshape(nomissing(ds[errorname][:,:,:],NaN),(sz[1],sz[2],1,sz[3]))
+    if !isnothing(errvarname)
+        error4d = reshape(nomissing(ds[errvarname][:,:,:],NaN),(sz[1],sz[2],1,sz[3]))
     else
         @info("no error field provided using $obs_err_std as error standard dev.")
         error4d = fill(obs_err_std,(sz[1],sz[2],1,sz[3]))
@@ -75,7 +77,7 @@ end
 function fill_default(data::AbstractVector{<:NamedTuple})
     # the first variable is the output if isoutput is not specified
     [(isoutput = i==1,
-      errorname = nothing,
+      errvarname = nothing,
       obs_err_std = 1f0,
       jitter_std = 0.05,
       ndims = 1,
@@ -87,7 +89,7 @@ function load_gridded_nc(data)
     d = fill_default(data)
 
     lon,lat,datatime,data_full1,error_full1,missingmask,mask = load_gridded_nc(
-        d[1].filename,d[1].varname,d[1].errorname);
+        d[1].filename,d[1].varname,d[1].errvarname);
 
     sz = size(data_full1)
     data_full = zeros(Float32,sz[1],sz[2],length(data),sz[4]);
@@ -98,7 +100,7 @@ function load_gridded_nc(data)
 
     for i in 2:length(data)
         lon_,lat_,datatime_,data_full[:,:,i,:],error_full[:,:,i,:],missingmask_,mask_ = load_gridded_nc(
-            d[i].filename,d[i].varname,d[i].errorname,
+            d[i].filename,d[i].varname,d[i].errvarname,
             obs_err_std = d[i].obs_err_std);
     end
 
