@@ -31,7 +31,7 @@ attributes:
 
 The the netCDF mask is 0 for invalid (e.g. land for an ocean application) and 1 for pixels (e.g. ocean).
 """
-function load_gridded_nc(fname::AbstractString,varname::AbstractString; minfrac = 0.05)
+function load_gridded_nc(fname::AbstractString,varname::AbstractString, errorname; minfrac = 0.05, obs_err_std = 1f0)
     ds = Dataset(fname);
     lon = nomissing(ds["lon"][:])
     lat = nomissing(ds["lat"][:])
@@ -61,28 +61,48 @@ function load_gridded_nc(fname::AbstractString,varname::AbstractString; minfrac 
     println("$varname data shape: $(format_size(sz)) data range: $(extrema(data[isfinite.(data)]))")
 
     data4d = reshape(data,(sz[1],sz[2],1,sz[3]))
-    return lon,lat,time,data4d,missingmask,mask
+
+    if !isnothing(errorname)
+        error4d = reshape(nomissing(ds[errorname][:,:,:],NaN),(sz[1],sz[2],1,sz[3]))
+    else
+        @info("no error field provided using $obs_err_std as error standard dev.")
+        error4d = fill(obs_err_std,(sz[1],sz[2],1,sz[3]))
+    end
+
+    return lon,lat,time,data4d,error4d,missingmask,mask
 end
 
-"""
-the first variable is for isoutput is none specified
-"""
-function load_gridded_nc(data::AbstractVector{NamedTuple{(:filename, :varname, :obs_err_std),T}}) where {T}
-    return load_gridded_nc([(d...,isoutput = i==1) for (i,d) in enumerate(data)])
+function fill_default(data::AbstractVector{<:NamedTuple})
+    # the first variable is the output if isoutput is not specified
+    [(isoutput = i==1,
+      errorname = nothing,
+      obs_err_std = 1f0,
+      jitter_std = 0.05,
+      ndims = 1,
+      d..., # overwrite all default value if provided
+      ) for (i,d) in enumerate(data)]
 end
 
 function load_gridded_nc(data)
-    lon,lat,datatime,data_full1,missingmask,mask = load_gridded_nc(data[1].filename,data[1].varname);
+    d = fill_default(data)
+
+    lon,lat,datatime,data_full1,error_full1,missingmask,mask = load_gridded_nc(
+        d[1].filename,d[1].varname,d[1].errorname);
+
     sz = size(data_full1)
     data_full = zeros(Float32,sz[1],sz[2],length(data),sz[4]);
+    error_full = zeros(Float32,sz[1],sz[2],length(data),sz[4]);
+
     data_full[:,:,1,:] = data_full1;
+    error_full[:,:,1,:] = error_full1;
 
     for i in 2:length(data)
-        lon_,lat_,datatime_,data_full[:,:,i,:],missingmask_,mask_ = load_gridded_nc(
-            data[i].filename,data[i].varname);
+        lon_,lat_,datatime_,data_full[:,:,i,:],error_full[:,:,i,:],missingmask_,mask_ = load_gridded_nc(
+            d[i].filename,d[i].varname,d[i].errorname,
+            obs_err_std = d[i].obs_err_std);
     end
 
-    return lon,lat,datatime,data_full,missingmask,mask
+    return lon,lat,datatime,data_full,error_full,missingmask,mask
 end
 
 function normalize2(data)
@@ -133,7 +153,7 @@ mutable struct NCData{T,N #=,TA=#}
     x::Array{T,5}
     isoutput::Vector{Bool}
     train::Bool
-    obs_err_std::Vector{T}
+#    obs_err_std::Vector{T}
     jitter_std::Vector{T}
     lon_scaled::Vector{T}
     lat_scaled::Vector{T}
@@ -211,8 +231,8 @@ export sizey
 """
     dd = NCData(lon,lat,time,data_full,missingmask,ndims;
                 train = false,
-                obs_err_std = 1.,
-                jitter_std = 0.05,
+                obs_err_std = fill(1.,size(data_full,3)),
+                jitter_std = fill(0.05,size(data_full,3)),
                 mask = trues(size(data_full)[1:2]),
 )
 
@@ -250,6 +270,10 @@ function NCData(lon,lat,time,data_full,missingmask,ndims;
     ndata = size(data_full,3)
     ntime = size(data_full,4)
 
+    @info "size(obs_err_std)" size(obs_err_std)
+    @info "number of parameters " ndata
+    @info "number of time instances " ntime
+
     time_cos = zeros(Float32,length(cycle_periods),length(time))
     time_sin = zeros(Float32,length(cycle_periods),length(time))
 
@@ -282,10 +306,15 @@ function NCData(lon,lat,time,data_full,missingmask,ndims;
         x[:,:,:,:,1] = replace(data,NaN => 0)
         x[:,:,:,:,2] = (1 .- isnan.(data))
 
-        for i = 1:ndata
-            # inv. error variance
-            x[:,:,i,:,1] ./= obs_err_std[i]^2
-            x[:,:,i,:,2] ./= obs_err_std[i]^2
+        if Base.ndims(obs_err_std) == 1
+            for i = 1:ndata
+                # inv. error variance
+                x[:,:,i,:,1] ./= obs_err_std[i]^2
+                x[:,:,i,:,2] ./= obs_err_std[i]^2
+            end
+        else
+            x[:,:,:,:,1] ./= obs_err_std.^2
+            x[:,:,:,:,2] ./= obs_err_std.^2
         end
     # else
     #     # dimensions of x: lon, lat, parameter, time, 5
@@ -316,7 +345,7 @@ function NCData(lon,lat,time,data_full,missingmask,ndims;
         x,
         isoutput,
         train,
-        Float32.(obs_err_std),
+#        Float32.(obs_err_std),
         Float32.(jitter_std),
         lon_scaled,
         lat_scaled,
@@ -334,7 +363,7 @@ end
 getp(x,sym,default) = (hasproperty(x, sym) ? getproperty(x,sym) : default)
 
 function NCData(data; kwargs...)
-    lon,lat,datatime,data_full,missingmask,mask = load_gridded_nc(data)
+    lon,lat,datatime,data_full,error_full,missingmask,mask = load_gridded_nc(data)
 
     default_jitter_std = 0.05
 
@@ -342,7 +371,7 @@ function NCData(data; kwargs...)
     ndims = [getp(d,:ndims,1) for d in data]
 
     return NCData(lon,lat,datatime,data_full,missingmask,ndims;
-                  obs_err_std = [d.obs_err_std for d in data],
+                  obs_err_std = error_full,
                   jitter_std = jitter_std,
                   isoutput = [d.isoutput for d in data],
                   mask = mask,
