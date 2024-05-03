@@ -5,6 +5,7 @@ using Test
 
 @testset "reconstruct gridded data" begin
     include("test_DINCAE_SST.jl")
+    include("test_regL2.jl")
 end
 
 @testset "reconstruct point cloud" begin

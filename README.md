@@ -2,7 +2,6 @@
 [![codecov.io](http://codecov.io/github/gher-uliege/DINCAE.jl/coverage.svg?branch=main)](http://codecov.io/github/gher-uliege/DINCAE.jl?branch=main)
 [![documentation stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gher-uliege.github.io/DINCAE.jl/stable/)
 [![documentation dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gher-uliege.github.io/DINCAE.jl/dev/)
-[![DOI](https://zenodo.org/badge/193079989.svg)](https://zenodo.org/badge/latestdoi/193079989)
 
 [![Issues](https://img.shields.io/github/issues-raw/gher-uliege/DINCAE.jl?style=plastic)](https://github.com/gher-uliege/DINCAE.jl/issues)
 ![Issues](https://img.shields.io/github/commit-activity/m/gher-uliege/DINCAE.jl)
