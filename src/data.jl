@@ -89,7 +89,8 @@ function load_gridded_nc(data)
     d = fill_default(data)
 
     lon,lat,datatime,data_full1,error_full1,missingmask,mask = load_gridded_nc(
-        d[1].filename,d[1].varname,d[1].errvarname);
+        d[1].filename,d[1].varname,d[1].errvarname,
+        obs_err_std = d[1].obs_err_std);
 
     sz = size(data_full1)
     data_full = zeros(Float32,sz[1],sz[2],length(data),sz[4]);
