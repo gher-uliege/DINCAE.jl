@@ -7,12 +7,13 @@ assignees: ''
 
 ---
 
-Please provide all information requested here
+__Please provide all information reuested here__
 
 **Describe the bug**
 A clear and concise description of what the bug is.
 
 **To Reproduce**
+
 Please provide a minimal Julia code example which reproduces the behavior (bug, performance regression, ...).
 An example is reproducible if it includes all steps allowing somebody else to get the same behavior as you are observing.
 If your example needs a dataset, reduce the size of the data so that it can be easily shared. If your dataset is private,
