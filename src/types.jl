@@ -5,4 +5,5 @@ struct ModelVector2_1
     directionobs
 end
 
-
+abstract type AbstractDataset{T,N}
+end
