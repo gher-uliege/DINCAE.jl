@@ -16,7 +16,7 @@ The method is described in the following articles:
 
 The neural network will be trained on the GPU. Note convolutional neural networks can require a lot of GPU memory depending on the domain size.
 [`Flux.jl`](https://github.com/FluxML/Flux.jl) supports NVIDIA GPUs as well as other vendors (see https://fluxml.ai/Flux.jl/stable/gpu/ for details).
-Training on the CPU can be performeded, but it is prohibitively slow.
+Training on the CPU can be performed, but it is prohibitively slow.
 
 ## User API
 
@@ -60,7 +60,7 @@ julia> using DINCAE
 ```
 
 
-You need to install and load cuDNN before calling a function in `DINCAE.jl`:
+You need to install and load `cuDNN` before calling a function in `DINCAE.jl`:
 
 ```julia
 using cuDNN
