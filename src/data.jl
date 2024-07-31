@@ -863,18 +863,19 @@ end
 
 
 # Iterator to prefetch data on a separate thread
-mutable struct PrefetchDataIter{T}
+struct PrefetchDataIter{T}
     iter::T
-    task::Union{Task,Nothing}
 end
 
-PrefetchDataIter(iter) = PrefetchDataIter(iter,nothing)
-
 function Base.iterate(d::PrefetchDataIter,args...)
-    if d.task == nothing
-        out = iterate(d.iter,args...)
+    # state is the iterator state of d.iter
+
+    if length(args) == 0
+        # init
+        out = iterate(d.iter)
     else
-        out = fetch(d.task)
+        (state,task) = args[1]
+        out = fetch(task)
     end
 
     if out == nothing
@@ -882,9 +883,9 @@ function Base.iterate(d::PrefetchDataIter,args...)
     else
         next,state = out
 
-        d.task = Threads.@spawn iterate(d.iter,state)
-        #d.task = @async iterate(d.iter,state)
-        return (next,state)
+        task = Threads.@spawn iterate(d.iter,state)
+        #task = @async iterate(d.iter,state)
+        return (next,(state,task))
     end
 end
 
@@ -892,3 +893,6 @@ end
     Random.shuffle!(d.iter)
     return d
 end
+
+Base.length(d::PrefetchDataIter) = length(d.iter)
+Base.eltype(d::PrefetchDataIter) = eltype(d.iter)
