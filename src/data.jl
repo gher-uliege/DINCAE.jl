@@ -767,6 +767,7 @@ struct DataBatches{Atype,T,N,Tdata,Tbatch}
     batchsize::Int
     perm::Vector{Int}
     batch::Tbatch
+    partial::Bool
 end
 
 function Base.length(d::DataBatches)
@@ -777,7 +778,13 @@ function Base.length(d::DataBatches)
             d.batch
         end
 
-    return ceil(Int,nobs(d.data)/(size(b)[end]))
+    length_fraction = nobs(d.data)/(size(b)[end])
+
+    if d.partial
+        return ceil(Int,length_fraction)
+    else
+        return floor(Int,length_fraction)
+    end
 end
 
 function Random.shuffle!(d::DataBatches)
@@ -785,7 +792,10 @@ function Random.shuffle!(d::DataBatches)
     return d
 end
 
-function DataBatches(Atype,data::AbstractDataset{T,N},batchsize; shuffle=data.train) where {T,N}
+function DataBatches(Atype,data::AbstractDataset{T,N},batchsize;
+                     shuffle = data.train,
+                     partial = true,
+                     ) where {T,N}
     perm =
         if shuffle
             randperm(nobs(data))
@@ -809,13 +819,13 @@ function DataBatches(Atype,data::AbstractDataset{T,N},batchsize; shuffle=data.tr
              zeros(T,(szy...,batchsize)))
 
     return DataBatches{Atype,T,N,typeof(data),typeof(batch)}(
-        data,batchsize,perm,batch)
+        data,batchsize,perm,batch,partial)
 end
 
 function Base.iterate(d::DataBatches{Atype,T,N},index = 0) where {Atype,T,N}
     bs = index+1 : min(index + d.batchsize,nobs(d.data))
 
-    if length(bs) == 0
+    if length(bs) < (d.partial ? 1 : d.batchsize)
         return nothing
     end
 

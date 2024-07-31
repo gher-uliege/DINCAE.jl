@@ -41,6 +41,7 @@ using ChainRulesCore
 import Base: length
 import Base: size
 import Base: getindex
+import Base: eltype
 import Random: shuffle!
 
 using Profile
