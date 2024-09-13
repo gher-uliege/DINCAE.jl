@@ -13,6 +13,7 @@ function train_init(model,optim; clip_grad = nothing, learning_rate = nothing)
     end
     params = Flux.params(model)
 
+    @info "number of parameters $(sum(length.(params)))"
     return (model,params,opt)
 end
 
