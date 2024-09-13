@@ -1,5 +1,5 @@
 [![Build Status](https://github.com/gher-uliege/DINCAE.jl/workflows/CI/badge.svg)](https://github.com/gher-uliege/DINCAE.jl/actions)
-[![codecov.io](http://codecov.io/github/gher-uliege/DINCAE.jl/coverage.svg?branch=main)](http://codecov.io/github/gher-uliege/DINCAE.jl?branch=main)
+[![codecov](https://codecov.io/github/gher-uliege/DINCAE.jl/graph/badge.svg?token=2FXNLLMNEF)](https://codecov.io/github/gher-uliege/DINCAE.jl)
 [![documentation stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gher-uliege.github.io/DINCAE.jl/stable/)
 [![documentation dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gher-uliege.github.io/DINCAE.jl/dev/)
 
