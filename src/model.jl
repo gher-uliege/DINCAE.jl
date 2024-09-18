@@ -359,6 +359,7 @@ function reconstruct(Atype,data_all,fnames_rec;
                      paramfile = nothing,
                      laplacian_penalty = 0,
                      laplacian_error_penalty = laplacian_penalty,
+                     modeldir = nothing,
 )
     DB(Atype,d,batch_size) = (Atype.(tmp) for tmp in DataLoader(d,batch_size))
 
@@ -529,6 +530,16 @@ function reconstruct(Atype,data_all,fnames_rec;
         flush(stdout)
 
         if e ∈ save_epochs
+            if !isnothing(modeldir)
+                println("Save model $e")
+                @show cpu(model).chains[1][1].weight[1,1,1,1]
+                model_fname = joinpath(modeldir,"model-checkpoint-" * @sprintf("%05d",e) * ".jld2")
+                model_state = Flux.state(cpu(model));
+                jldsave(model_fname; model_state, train_mean_data,
+                        ntime_win, is3D, cycle_periods, remove_mean,
+                        direction_obs, e)
+            end
+
             println("Save output $e")
 
             for (d_iter,ds_) in zip(data_iter[2:end],ds)
