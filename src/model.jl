@@ -370,22 +370,29 @@ function reconstruct(Atype,data_all,fnames_rec;
 
     @info "Number of threads: $(Threads.nthreads())"
 
-    # first element in data_all is for training
-    data_sources = [DINCAE.NCData(
-        d,
-        train = i == 1,
-        #train = false,
+    train_data = DINCAE.NCData(
+        data_all[1],
+        train = true,
         ntime_win = ntime_win,
         is3D = is3D,
         cycle_periods = cycle_periods,
         remove_mean = remove_mean,
         direction_obs = direction_obs,
-    ) for (i,d) in enumerate(data_all)]
+    )
 
-    # use common mean
-    for i = 2:length(data_all)
-        data_sources[i].meandata .= data_sources[1].meandata
-    end
+    train_mean_data = train_data.meandata
+    # first element in data_all is for training
+    data_sources = [train_data, [DINCAE.NCData(
+        d,
+        train = false,
+        ntime_win = ntime_win,
+        is3D = is3D,
+        cycle_periods = cycle_periods,
+        remove_mean = remove_mean,
+        # use common mean
+        mean_data = train_mean_data,
+        direction_obs = direction_obs,
+    ) for d in data_all[2:end]]...]
 
     #data_iter = [PrefetchDataIter(DINCAE.DataBatches(Atype,ds,batch_size)) for ds in data_sources]
     data_iter = [DINCAE.DataBatches(Atype,ds,batch_size) for ds in data_sources]
@@ -394,13 +401,11 @@ function reconstruct(Atype,data_all,fnames_rec;
     train = data_iter[1]
     # try to overfir a single minibatch
     #train = [first(data_iter[1])]
-    train_data = data_sources[1]
 
     all_varnames = map(v -> v.varname,data_all[1])
 
     if output_ndims == 1
         output_varnames = all_varnames[train_data.isoutput]
-
         # number of output variables
         noutput = sum(train_data.isoutput)
         dec_nfilter = vcat([2*noutput],enc_nfilter_internal)

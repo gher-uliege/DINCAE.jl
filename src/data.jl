@@ -257,6 +257,7 @@ function NCData(lon,lat,time,data_full,missingmask,ndims;
                 cycle_periods = (365.25,), # days
                 time_origin = DateTime(1970,1,1),
                 remove_mean = true,
+                mean_data = nothing,
                 mask = trues(size(data_full)[1:2]),
                 direction_obs = nothing,
 #                auxdata = (),
@@ -264,7 +265,12 @@ function NCData(lon,lat,time,data_full,missingmask,ndims;
 
     meandata =
         if remove_mean
-            sum(x -> (isnan(x) ? zero(x) : x),data_full,dims = 4) ./ sum(.!isnan,data_full,dims = 4)
+            if isnothing(mean_data)
+                # compute mean
+                sum(x -> (isnan(x) ? zero(x) : x),data_full,dims = 4) ./ sum(.!isnan,data_full,dims = 4)
+            else
+                mean_data
+            end
         else
             zeros(size(data_full)[1:end-1]...,1)
         end
