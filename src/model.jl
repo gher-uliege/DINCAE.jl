@@ -532,7 +532,6 @@ function reconstruct(Atype,data_all,fnames_rec;
         if e ∈ save_epochs
             if !isnothing(modeldir)
                 println("Save model $e")
-                @show cpu(model).chains[1][1].weight[1,1,1,1]
                 model_fname = joinpath(modeldir,"model-checkpoint-" * @sprintf("%05d",e) * ".jld2")
                 model_state = Flux.state(cpu(model));
                 jldsave(model_fname; model_state, train_mean_data,
