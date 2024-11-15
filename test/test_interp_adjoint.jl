@@ -22,23 +22,23 @@ dA = gradient(f,pos,B)[2]
 @test dA[2,2] ≈ 0.5
 
 if CUDA.functional()
-    cu_pos  = cu(pos)
-    cu_values = cu(values)
-    cu_B = cu(B)
+    pos_d  = cu(pos)
+    values_d = cu(values)
+    B_d = cu(B)
 
-    cu_A = interp_adjn(cu_pos,cu_values,sz)
+    A_d = interp_adjn(pos_d,values_d,sz)
 
     CUDA.@allowscalar begin
-        @test cu_A[1,2] ≈ 1.5
-        @test cu_A[2,2] ≈ 1.5
+        @test A_d[1,2] ≈ 1.5
+        @test A_d[2,2] ≈ 1.5
     end
 
-    cu_dA = gradient(f,cu_pos,cu_B)[2]
+    dA_d = gradient(f,pos_d,B_d)[2]
 
 
     CUDA.@allowscalar begin
-        @test cu_dA[1,2] ≈ 0.5
-        @test cu_dA[2,2] ≈ 0.5
+        @test dA_d[1,2] ≈ 0.5
+        @test dA_d[2,2] ≈ 0.5
     end
 end
 
