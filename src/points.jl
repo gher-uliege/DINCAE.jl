@@ -24,13 +24,7 @@ function interpnd!(pos::AbstractVector{<:NTuple{N}},A,vec) where N
     #return vec
     return nothing
 end
-#=
-function interpnd!(pos::AbstractVector{<:NTuple{N}},A::KnetArray,vec) where N
-    cuA = CuArray(A)
-    cuvec = CuArray(vec)
-    @cuda DINCAE.interpnd!(pos,cuA,cuvec)
-end
-=#
+
 function interpnd!(pos::AbstractVector{<:NTuple{N}},cuA::CuArray,cuvec) where N
     @cuda DINCAE.interpnd!(pos,cuA,cuvec)
 end
@@ -42,8 +36,6 @@ function interpnd(pos,A)
     interpnd!(pos,A,vec)
     return vec
 end
-
-#Knet.AutoGrad.@primitive interpnd(pos,A),dy,y 0 interp_adjn(pos,dy,size(A))
 
 function ChainRulesCore.rrule(::typeof(interpnd), pos::AbstractVector{<:NTuple{N}}, A) where N
     function interpnd_pullback(dy)
@@ -82,14 +74,6 @@ function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
 
     return nothing
 end
-
-#=
-function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values::KnetArray,A2) where N
-    cuvalues = CuArray(values)
-    cuA2 = CuArray(A2)
-    @cuda interp_adjn!(pos,cuvalues,cuA2)
-end
-=#
 
 function interp_adjn!(pos::AbstractVector{<:NTuple{N}},cuvalues::CuArray,cuA2) where N
     @cuda interp_adjn!(pos,cuvalues,cuA2)
@@ -380,7 +364,7 @@ function costfun(
     xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth_uncertain;
     laplacian_penalty = 0,
     laplacian_error_penalty = laplacian_penalty,
-    ) where TA <: Union{Array{T,N},CuArray{T,N}#=,KnetArray{T,N}=#} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
+    ) where TA <: Union{Array{T,N},CuArray{T,N}} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
 
     #@show typeof(xin)
     #@show typeof(xrec)
@@ -479,7 +463,7 @@ end
 Mandatory parameters:
 
 * `T`: `Float32` or `Float64`: float-type used by the neural network
-* `Array{T}` or `KnetArray{T}`: array-type used by the neural network.
+* `Array{T}` or `CuArray{T}`: array-type used by the neural network.
 * `filename`: NetCDF file in the format described below.
 * `varname`: name of the primary variable in the NetCDF file.
 * `grid`: tuple of ranges with the grid in the longitude and latitude direction e.g. `(-180:1:180,-90:1:90)`.

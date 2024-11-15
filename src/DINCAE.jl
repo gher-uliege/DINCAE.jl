@@ -46,10 +46,7 @@ import Base: eltype
 import Random: shuffle!
 
 using Profile
-#import Knet: KnetArray, AutoGrad
-#import Knet
 
-#include("knet.jl")
 include("flux.jl")
 include("types.jl")
 include("data.jl")

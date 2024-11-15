@@ -6,7 +6,6 @@ CatSkip(x) = SkipConnection(x,(mx,y) -> cat(mx, y, dims=Val(3)))
 #using JLD2
 
 # save inversion
-#function sinv(x::Union{AbstractArray{T},KnetArray{T},AutoGrad.Result{<:AbstractArray{T}}}; minx = T(1e-3)) where T
 function sinv(x, ; minx = eltype(x)(1e-3))
     T = eltype(x)
     return one(T) ./ max.(x,minx)
