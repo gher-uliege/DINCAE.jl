@@ -25,10 +25,6 @@ function interpnd!(pos::AbstractVector{<:NTuple{N}},A,vec) where N
     return nothing
 end
 
-function interpnd!(pos::AbstractVector{<:NTuple{N}},cuA::CuArray,cuvec) where N
-    @cuda DINCAE.interpnd!(pos,cuA,cuvec)
-end
-
 #interpnd(pos,A) = interpnd!(pos,A,zeros(eltype(A),length(pos)))
 function interpnd(pos,A)
     vec = similar(A,length(pos))
@@ -73,10 +69,6 @@ function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
     end
 
     return nothing
-end
-
-function interp_adjn!(pos::AbstractVector{<:NTuple{N}},cuvalues::CuArray,cuA2) where N
-    @cuda interp_adjn!(pos,cuvalues,cuA2)
 end
 
 function interp_adjn(pos::AbstractVector{<:NTuple{N}},values,sz::NTuple{N,Int}) where N
@@ -364,7 +356,7 @@ function costfun(
     xrec,xtrue::Vector{NamedTuple{(:pos, :x),Tuple{Tpos,TA}}},truth_uncertain;
     laplacian_penalty = 0,
     laplacian_error_penalty = laplacian_penalty,
-    ) where TA <: Union{Array{T,N},CuArray{T,N}} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
+    ) where TA <: Union{AbstractArray{T,N}} where Tpos <: AbstractVector{NTuple{N,T}} where {N,T}
 
     #@show typeof(xin)
     #@show typeof(xrec)
@@ -463,7 +455,7 @@ end
 Mandatory parameters:
 
 * `T`: `Float32` or `Float64`: float-type used by the neural network
-* `Array{T}` or `CuArray{T}`: array-type used by the neural network.
+* `Array{T}`, `CuArray{T}`,...: array-type used by the neural network.
 * `filename`: NetCDF file in the format described below.
 * `varname`: name of the primary variable in the NetCDF file.
 * `grid`: tuple of ranges with the grid in the longitude and latitude direction e.g. `(-180:1:180,-90:1:90)`.

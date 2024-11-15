@@ -29,7 +29,6 @@ The code is available at:
 """
 module DINCAE
 using Base.Threads
-using CUDA
 using Dates
 using Random
 using NCDatasets

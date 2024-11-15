@@ -42,12 +42,6 @@ weights(m::Chain) = Flux.params(m)
 
 weights(c::Conv) = [c.weight]
 
-
-
-@inline function _to_device(::Type{Atype}) where Atype <: CuArray
-    return Flux.gpu
-end
-
 @inline function _to_device(::Type{Atype}) where Atype <: AbstractArray
     return Flux.cpu
 end
