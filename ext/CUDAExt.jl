@@ -34,6 +34,7 @@ function interpnd!(pos::AbstractVector{<:NTuple{N}},cuA::CuArray,cuvec) where N
         config = launch_configuration(kernel.fun)
         threads = min(len, config.threads)
         blocks = cld(len, threads)
+        @debug blocks,threads
 
         kernel(pos,cuA,cuvec; threads, blocks)
     end
@@ -41,10 +42,8 @@ end
 
 
 function cu_interp_adjn!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
-#    index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
-#    stride = gridDim().x * blockDim().x
-    index = threadIdx().x    # this example only requires linear indexing, so just use `x`
-    stride = blockDim().x
+    index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    stride = gridDim().x * blockDim().x
 
     A2 .= 0
 
@@ -59,7 +58,9 @@ function cu_interp_adjn!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
             p2 = Tuple(offset) .+ ind
 
             cc = prod(ntuple(n -> (offset[n] == 1 ? c[n] : 1-c[n]),Val(N)))
-            A2[p2...] += values[i] * cc
+
+            I = LinearIndices(A2)[p2...]
+            CUDA.atomic_add!(pointer(A2,I), values[i] * cc)
         end
     end
 
@@ -68,21 +69,13 @@ end
 
 
 function interp_adjn!(pos::AbstractVector{<:NTuple{N}},cuvalues::CuArray,cuA2) where N
-
     CUDA.@sync begin
-        @cuda threads=256 cu_interp_adjn!(pos,cuvalues,cuA2)
-
-        #=
         len = length(pos)
-        kernel = @cuda launch=false cu_interp_adjn!(pos,cuvalues,cuA2)
-        config = launch_configuration(kernel.fun)
-        threads = min(len, config.threads)
-        blocks = cld(len, threads)
-
-        kernel(pos,cuvalues,cuA2; threads, blocks)
-=#
+        #numblocks = ceil(Int, length(pos)/256)
+        # must be one
+        numblocks = 1
+        @cuda threads=256 blocks=numblocks cu_interp_adjn!(pos,cuvalues,cuA2)
     end
-
 end
 
 @inline function _to_device(::Type{Atype}) where Atype <: CuArray
