@@ -5,7 +5,7 @@ using CUDA
 using Flux
 
 
-function cu_interpnd!(pos::AbstractVector{<:NTuple{N}},A,vec) where N
+function interpnd_d!(pos::AbstractVector{<:NTuple{N}},A,vec) where N
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = gridDim().x * blockDim().x
 
@@ -27,21 +27,21 @@ function cu_interpnd!(pos::AbstractVector{<:NTuple{N}},A,vec) where N
     return nothing
 end
 
-function interpnd!(pos::AbstractVector{<:NTuple{N}},cuA::CuArray,cuvec) where N
+function interpnd!(pos::AbstractVector{<:NTuple{N}},d_A::CuArray,vec_d) where N
     CUDA.@sync begin
         len = length(pos)
-        kernel = @cuda launch=false cu_interpnd!(pos,cuA,cuvec)
+        kernel = @cuda launch=false interpnd_d!(pos,d_A,vec_d)
         config = launch_configuration(kernel.fun)
         threads = min(len, config.threads)
         blocks = cld(len, threads)
         @debug blocks,threads
 
-        kernel(pos,cuA,cuvec; threads, blocks)
+        kernel(pos,d_A,vec_d; threads, blocks)
     end
 end
 
 
-function cu_interp_adjn!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
+function interp_adjn_d!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = gridDim().x * blockDim().x
 
@@ -68,13 +68,13 @@ function cu_interp_adjn!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
 end
 
 
-function interp_adjn!(pos::AbstractVector{<:NTuple{N}},cuvalues::CuArray,cuA2) where N
+function interp_adjn!(pos::AbstractVector{<:NTuple{N}},cuvalues::CuArray,d_A2) where N
     CUDA.@sync begin
         len = length(pos)
         #numblocks = ceil(Int, length(pos)/256)
         # must be one
         numblocks = 1
-        @cuda threads=256 blocks=numblocks cu_interp_adjn!(pos,cuvalues,cuA2)
+        @cuda threads=256 blocks=numblocks interp_adjn_d!(pos,cuvalues,d_A2)
     end
 end
 
