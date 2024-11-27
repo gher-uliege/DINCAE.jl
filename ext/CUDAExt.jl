@@ -45,6 +45,7 @@ function interp_adjn_d!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = gridDim().x * blockDim().x
 
+    # initialize before kernel launch???
     A2 .= 0
 
     @inbounds for i = index:stride:length(pos)

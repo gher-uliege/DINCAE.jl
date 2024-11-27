@@ -6,12 +6,15 @@ using DINCAE
 using Base.Iterators
 using Random
 using NCDatasets
+using AMDGPU
 using CUDA
 
 const F = Float32
 Atype =
     if CUDA.functional()
         CuArray{F}
+    elseif AMDGPU.functional()
+        ROCArray{F}
     else
         Array{F}
     end
