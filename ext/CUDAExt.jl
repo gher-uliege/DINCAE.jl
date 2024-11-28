@@ -45,9 +45,6 @@ function interp_adjn_d!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = gridDim().x * blockDim().x
 
-    # initialize before kernel launch???
-    A2 .= 0
-
     @inbounds for i = index:stride:length(pos)
         p = pos[i]
         ind = floor.(Int,p)
@@ -70,6 +67,8 @@ end
 
 
 function interp_adjn!(pos::AbstractVector{<:NTuple{N}},cuvalues::CuArray,d_A2) where N
+    A2 .= 0
+
     CUDA.@sync begin
         len = length(pos)
         #numblocks = ceil(Int, length(pos)/256)
