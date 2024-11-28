@@ -1,10 +1,11 @@
-ENV["CUDA_VISIBLE_DEVICES"]=""
+#ENV["CUDA_VISIBLE_DEVICES"]=""
 
 using DINCAE
 using NCDatasets
 using Random
 using Test
 using CUDA
+using AMDGPU
 
 T = Float32
 filename = "subset-sla-train.nc"
@@ -58,6 +59,8 @@ Random.seed!(seed)
 Atype =
     if CUDA.functional()
         CuArray{T}
+    elseif AMDGPU.functional()
+        ROCArray{T}
     else
         Array{T}
     end
