@@ -67,7 +67,7 @@ end
 
 
 function interp_adjn!(pos::AbstractVector{<:NTuple{N}},cuvalues::CuArray,d_A2) where N
-    A2 .= 0
+    d_A2 .= 0
 
     CUDA.@sync begin
         len = length(pos)
