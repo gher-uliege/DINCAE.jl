@@ -11,7 +11,8 @@ function interpnd_d!(pos::AbstractVector{<:NTuple{N}},A,vec) where N
 
     @inbounds for i = index:stride:length(pos)
         p = pos[i]
-        ind = floor.(Int,p)
+        #ind = floor.(Int,p)
+        ind = unsafe_trunc.(Int32,floor.(p))
 
         # interpolation coefficients
         c = p .- ind
@@ -27,27 +28,28 @@ function interpnd_d!(pos::AbstractVector{<:NTuple{N}},A,vec) where N
     return nothing
 end
 
-function interpnd!(pos::AbstractVector{<:NTuple{N}},d_A::CuArray,vec_d) where N
+function interpnd!(pos::AbstractVector{<:NTuple{N}},A::CuArray,vec) where N
     CUDA.@sync begin
         len = length(pos)
-        kernel = @cuda launch=false interpnd_d!(pos,d_A,vec_d)
+        kernel = @cuda launch=false interpnd_d!(pos,A,vec)
         config = launch_configuration(kernel.fun)
         threads = min(len, config.threads)
         blocks = cld(len, threads)
         @debug blocks,threads
 
-        kernel(pos,d_A,vec_d; threads, blocks)
+        kernel(pos,A,vec; threads, blocks)
     end
 end
 
 
-function interp_adjn_d!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
+function interp_adjn_d!(pos::AbstractVector{<:NTuple{N}},values,B) where N
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = gridDim().x * blockDim().x
 
     @inbounds for i = index:stride:length(pos)
         p = pos[i]
-        ind = floor.(Int,p)
+        #ind = floor.(Int,p)
+        ind = unsafe_trunc.(Int32,floor.(p))
 
         # interpolation coefficients
         c = p .- ind
@@ -57,8 +59,8 @@ function interp_adjn_d!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
 
             cc = prod(ntuple(n -> (offset[n] == 1 ? c[n] : 1-c[n]),Val(N)))
 
-            I = LinearIndices(A2)[p2...]
-            CUDA.atomic_add!(pointer(A2,I), values[i] * cc)
+            I = LinearIndices(B)[p2...]
+            CUDA.atomic_add!(pointer(B,I), values[i] * cc)
         end
     end
 
@@ -66,15 +68,15 @@ function interp_adjn_d!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
 end
 
 
-function interp_adjn!(pos::AbstractVector{<:NTuple{N}},cuvalues::CuArray,d_A2) where N
-    d_A2 .= 0
+function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values::CuArray,B) where N
+    B .= 0
 
     CUDA.@sync begin
         len = length(pos)
         #numblocks = ceil(Int, length(pos)/256)
         # must be one
         numblocks = 1
-        @cuda threads=256 blocks=numblocks interp_adjn_d!(pos,cuvalues,d_A2)
+        @cuda threads=256 blocks=numblocks interp_adjn_d!(pos,values,B)
     end
 end
 

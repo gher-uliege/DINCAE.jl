@@ -34,16 +34,16 @@ function interpnd_d!(pos::AbstractVector{<:NTuple{N}},A,vec) where N
     return nothing
 end
 
-function interpnd!(pos::AbstractVector{<:NTuple{N}},A_d::ROCArray,vec_d) where N
+function interpnd!(pos::AbstractVector{<:NTuple{N}},A::ROCArray,vec) where N
     AMDGPU.@sync begin
         len = length(pos)
-        kernel = @roc launch=false interpnd_d!(pos,A_d,vec_d)
+        kernel = @roc launch=false interpnd_d!(pos,A,vec)
         config = AMDGPU.launch_configuration(kernel)
         groupsize = min(len, config.groupsize)
         gridsize = cld(len, groupsize)
         @debug gridsize,groupsize
 
-        kernel(pos,A_d,vec_d; groupsize, gridsize)
+        kernel(pos,A,vec; groupsize, gridsize)
     end
 end
 
@@ -80,15 +80,15 @@ function interp_adjn_d!(pos::AbstractVector{<:NTuple{N}},values,B) where N
 end
 
 
-function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values_d::ROCArray,B_d) where N
-    B_d .= 0
+function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values::ROCArray,B) where N
+    B .= 0
 
     AMDGPU.@sync begin
         len = length(pos)
         #numgridsize = ceil(Int, length(pos)/256)
         # must be one
         numgridsize = 1
-        @roc groupsize=256 gridsize=numgridsize interp_adjn_d!(pos,values_d,B_d)
+        @roc groupsize=256 gridsize=numgridsize interp_adjn_d!(pos,values,B)
     end
 end
 
