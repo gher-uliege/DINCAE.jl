@@ -570,32 +570,17 @@ function reconstruct_points(
 
     nvar = sz[3]
     @info "number of variables: $nvar"
-    gamma = log(min_std_err^(-2))
-    @info "gamma: $gamma"
     noutput = 1
 
-    enc_nfilter = vcat([nvar],enc_nfilter_internal)
-    dec_nfilter = vcat([2*noutput],enc_nfilter_internal)
-
-    if loss_weights_refine == (1.,)
-        println("no refine")
-        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method) ,)
-    else
-        enc_nfilter2 = copy(enc_nfilter)
-        enc_nfilter2[1] += dec_nfilter[1]
-        dec_nfilter2 = copy(enc_nfilter2)
-
-        steps = (DINCAE.recmodel4(sz[1:2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
-                 DINCAE.recmodel4(sz[1:2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
-    end
-    model = StepModel(
-        steps,loss_weights_refine,truth_uncertain,gamma;
-        regularization_L1 = regularization_L1_beta,
-        regularization_L2 = regularization_L2_beta,
-        laplacian_penalty = laplacian_penalty,
-        laplacian_error_penalty = laplacian_error_penalty,
-    )
-
+    model = genmodel(sz,noutput;
+                     enc_nfilter_internal,
+                     upsampling_method,
+                     skipconnections,
+                     min_std_err,
+                     loss_weights_refine,
+                     truth_uncertain,
+                     regularization_L1_beta, regularization_L2_beta,
+                     laplacian_penalty, laplacian_error_penalty)
     device = _to_device(Atype)
 
     model = model |> device
@@ -695,7 +680,7 @@ function reconstruct_points(
                 ds_.attrib["auxdata_filenames"] = getindex.(auxdata_files,:filename)
                 ds_.attrib["auxdata_varnames"] = getindex.(auxdata_files,:varname)
                 ds_.attrib["auxdata_errvarname"] = getindex.(auxdata_files,:errvarname)
-            else 
+            else
                 @debug("No auxiliary data files")
                 ds_.attrib["auxdata_filenames"] = ""
                 ds_.attrib["auxdata_varnames"] = ""

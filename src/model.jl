@@ -285,7 +285,84 @@ function recmodel4(sz,enc_nfilter,dec_nfilter,skipconnections,l=1; method = :nea
     end
 end
 
+function genmodel(sz,noutput;
+                  truth_uncertain = false,
+                  enc_nfilter_internal = [16,24,36,54],
+                  skipconnections = 2:(length(enc_nfilter_internal)+1),
+                  regularization_L1_beta = 0,
+                  regularization_L2_beta = 0,
+                  upsampling_method = :nearest,
+                  loss_weights_refine = (1.,),
+                  min_std_err = 0.006737946999085467,
+                  output_ndims = 1,
+                  direction_obs = nothing,
+                  laplacian_penalty = 0,
+                  laplacian_error_penalty = laplacian_penalty,
+                  )
 
+    nvar = sz[end-1]
+    enc_nfilter = vcat([nvar],enc_nfilter_internal)
+
+    if output_ndims == 1
+        dec_nfilter = vcat([2*noutput],enc_nfilter_internal)
+    else
+        noutput = output_ndims
+        # 5 (u,v) and lower matrix of P
+        dec_nfilter = vcat([nscalar_per_obs_(output_ndims)],
+                           enc_nfilter_internal)
+    end
+
+
+    @info "Number of filters in encoder: $enc_nfilter"
+    @info "Number of filters in decoder: $dec_nfilter"
+
+
+    gamma = log(min_std_err^(-2))
+    @info "Gamma:             $gamma"
+
+    @info "Number of filters: $enc_nfilter"
+    if loss_weights_refine == (1.,)
+        steps = (DINCAE.recmodel4(
+            sz[1:end-2],
+                enc_nfilter,
+                dec_nfilter,
+                skipconnections,
+                method = upsampling_method),)
+    else
+        println("Step model")
+
+        enc_nfilter2 = copy(enc_nfilter)
+        enc_nfilter2[1] += dec_nfilter[1]
+        dec_nfilter2 = copy(dec_nfilter)
+        @info "Number of filters in encoder (refinement): $enc_nfilter2"
+        @info "Number of filters in decoder (refinement): $dec_nfilter2"
+
+        steps = (DINCAE.recmodel4(sz[1:end-2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
+                 DINCAE.recmodel4(sz[1:end-2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
+    end
+
+    if output_ndims == 1
+        model = StepModel(
+            steps,loss_weights_refine,truth_uncertain,gamma;
+            regularization_L1 = regularization_L1_beta,
+            regularization_L2 = regularization_L2_beta,
+            laplacian_penalty,
+            laplacian_error_penalty,
+        )
+    else
+        model = StepModel(
+            steps,loss_weights_refine,truth_uncertain,gamma;
+            final_layer = identity,
+            costfun = (xrec,xtrue) -> vector2_costfun(xrec,xtrue,truth_uncertain,direction_obs),
+            regularization_L1 = regularization_L1_beta,
+            regularization_L2 = regularization_L2_beta,
+            laplacian_penalty,
+            laplacian_error_penalty,
+        )
+    end
+
+    return model
+end
 
 
 """
@@ -366,6 +443,7 @@ function reconstruct(Atype,data_all,fnames_rec;
         error("No output will be saved. Consider to adjust save_epochs (currently $save_epochs) or epochs (currently $epochs).")
     end
 
+    device = _to_device(Atype)
     varname = data_all[1][1].varname
 
     @info "Number of threads: $(Threads.nthreads())"
@@ -408,15 +486,12 @@ function reconstruct(Atype,data_all,fnames_rec;
         output_varnames = all_varnames[train_data.isoutput]
         # number of output variables
         noutput = sum(train_data.isoutput)
-        dec_nfilter = vcat([2*noutput],enc_nfilter_internal)
     else
         @assert output_ndims == 2
         output_varnames = ["u","v"]
 
         noutput = output_ndims
-        # 5 (u,v) and lower matrix of P
-        dec_nfilter = vcat([nscalar_per_obs_(output_ndims)],
-                           enc_nfilter_internal)
+        direction_obs = device(direction_obs)
     end
 
     @info "Output variables:  $output_varnames"
@@ -434,69 +509,29 @@ function reconstruct(Atype,data_all,fnames_rec;
     @info "Input size:        $(format_size(sz))"
     @info "Input sum:         $(sum(inputs_))"
 
-    nvar = sz[end-1]
-    enc_nfilter = vcat([nvar],enc_nfilter_internal)
 
-    @info "Number of filters in encoder: $enc_nfilter"
-    @info "Number of filters in decoder: $dec_nfilter"
-
-
-    gamma = log(min_std_err^(-2))
-    @info "Gamma:             $gamma"
-
-    @info "Number of filters: $enc_nfilter"
-    if loss_weights_refine == (1.,)
-        steps = (DINCAE.recmodel4(
-            sz[1:end-2],
-                enc_nfilter,
-                dec_nfilter,
-                skipconnections,
-                method = upsampling_method),)
-    else
-        println("Step model")
-
-        enc_nfilter2 = copy(enc_nfilter)
-        enc_nfilter2[1] += dec_nfilter[1]
-        dec_nfilter2 = copy(dec_nfilter)
-        @info "Number of filters in encoder (refinement): $enc_nfilter2"
-        @info "Number of filters in decoder (refinement): $dec_nfilter2"
-
-        steps = (DINCAE.recmodel4(sz[1:end-2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
-                 DINCAE.recmodel4(sz[1:end-2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
-    end
-
-    if output_ndims == 1
-        model = StepModel(
-            steps,loss_weights_refine,truth_uncertain,gamma;
-            regularization_L1 = regularization_L1_beta,
-            regularization_L2 = regularization_L2_beta,
-            laplacian_penalty = laplacian_penalty,
-            laplacian_error_penalty = laplacian_error_penalty,
-        )
-    else
-        model = StepModel(
-            steps,loss_weights_refine,truth_uncertain,gamma;
-            final_layer = identity,
-            costfun = (xrec,xtrue) -> vector2_costfun(xrec,xtrue,truth_uncertain,Atype(direction_obs)),
-            regularization_L1 = regularization_L1_beta,
-            regularization_L2 = regularization_L2_beta,
-            laplacian_penalty = laplacian_penalty,
-            laplacian_error_penalty = laplacian_error_penalty,
-        )
-    end
-
-    device = _to_device(Atype)
+    model = genmodel(sz,noutput;
+                     enc_nfilter_internal,
+                     upsampling_method,
+                     skipconnections,
+                     min_std_err,
+                     loss_weights_refine,
+                     truth_uncertain,
+                     output_ndims,
+                     direction_obs,
+                     regularization_L1_beta, regularization_L2_beta,
+                     laplacian_penalty, laplacian_error_penalty)
 
     @info "using device:      $device"
     model = model |> device
 
-    xrec = model(Atype(inputs_))
+    xrec = model(device(inputs_))
     @info "Output size:       $(format_size(size(xrec)))"
     @info "Output range:      $(extrema(Array(xrec)))"
     @info "Output sum:        $(sum(xrec))"
 
-    #loss = model(Atype(inputs_), Atype(xtrue))
-    loss = loss_function(model,Atype(inputs_), Atype(xtrue))
+    #loss = model(device(inputs_), device(xtrue))
+    loss = loss_function(model,device(inputs_), device(xtrue))
     @info "Initial loss:      $loss"
 
     losses = typeof(loss)[]
