@@ -570,9 +570,10 @@ function reconstruct_points(
 
     nvar = sz[3]
     @info "number of variables: $nvar"
+    @show sz
     noutput = 1
 
-    model = genmodel(sz,noutput;
+    model = genmodel(sz[1:end-1],nvar,noutput;
                      enc_nfilter_internal,
                      upsampling_method,
                      skipconnections,

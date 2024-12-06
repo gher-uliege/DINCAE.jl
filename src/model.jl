@@ -285,7 +285,7 @@ function recmodel4(sz,enc_nfilter,dec_nfilter,skipconnections,l=1; method = :nea
     end
 end
 
-function genmodel(sz,noutput;
+function genmodel(sz,ninput,noutput;
                   truth_uncertain = false,
                   enc_nfilter_internal = [16,24,36,54],
                   skipconnections = 2:(length(enc_nfilter_internal)+1),
@@ -300,7 +300,7 @@ function genmodel(sz,noutput;
                   laplacian_error_penalty = laplacian_penalty,
                   )
 
-    nvar = sz[end-1]
+    nvar = ninput
     enc_nfilter = vcat([nvar],enc_nfilter_internal)
 
     if output_ndims == 1
@@ -323,7 +323,7 @@ function genmodel(sz,noutput;
     @info "Number of filters: $enc_nfilter"
     if loss_weights_refine == (1.,)
         steps = (DINCAE.recmodel4(
-            sz[1:end-2],
+            sz,
                 enc_nfilter,
                 dec_nfilter,
                 skipconnections,
@@ -337,8 +337,8 @@ function genmodel(sz,noutput;
         @info "Number of filters in encoder (refinement): $enc_nfilter2"
         @info "Number of filters in decoder (refinement): $dec_nfilter2"
 
-        steps = (DINCAE.recmodel4(sz[1:end-2],enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
-                 DINCAE.recmodel4(sz[1:end-2],enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
+        steps = (DINCAE.recmodel4(sz,enc_nfilter,dec_nfilter,skipconnections; method = upsampling_method),
+                 DINCAE.recmodel4(sz,enc_nfilter2,dec_nfilter2,skipconnections; method = upsampling_method))
     end
 
     if output_ndims == 1
@@ -510,7 +510,7 @@ function reconstruct(Atype,data_all,fnames_rec;
     @info "Input sum:         $(sum(inputs_))"
 
 
-    model = genmodel(sz,noutput;
+    model = genmodel(sz[1:end-2],sz[end-1],noutput;
                      enc_nfilter_internal,
                      upsampling_method,
                      skipconnections,
