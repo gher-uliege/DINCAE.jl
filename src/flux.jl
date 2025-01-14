@@ -7,24 +7,26 @@ _Upsample(sz::Tuple, nvar; method = :nearest) = Upsample(method,scale = 2)
 function train_init(model,optim; clip_grad = nothing, learning_rate = nothing)
     @assert optim == :ADAM
 
-    opt = Flux.Adam(learning_rate)
+    opt_chain = (Flux.Adam(learning_rate),)
     if clip_grad !== nothing
-        opt = Flux.Optimiser(Flux.ClipValue(clip_grad),opt)
-        opt_state = Flux.setup(opt, model)
+        opt_chain = (ClipGrad(clip_grad),opt_chain...)
     end
+    opt = Flux.OptimiserChain(opt_chain...)
+    opt_state = Flux.setup(opt, model)
+
     params = Flux.trainables(model)
 
-    @info "number of parameters $(sum(length.(params)))"
+    @info "number of parameters $(sum(length,params))"
     return (model,params,opt_state)
 end
 
 
 function train_epoch!((model,params,opt_state),dl,learning_rate; clip_grad = nothing)
+    Optimisers.adjust!(opt_state, learning_rate)
     loss_sum = 0
     N = 0
     for samples in dl
         loss, grads = Flux.withgradient(model) do m
-            #model(samples...)
             loss_function(m,samples...)
         end
 
@@ -38,7 +40,7 @@ function train_epoch!((model,params,opt_state),dl,learning_rate; clip_grad = not
 end
 
 # TODO, exclude biases
-weights(m::Chain) = Flux.params(m)
+weights(m::Chain) = Flux.trainables(m)
 
 weights(c::Conv) = [c.weight]
 
