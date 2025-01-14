@@ -9,26 +9,26 @@ function train_init(model,optim; clip_grad = nothing, learning_rate = nothing)
 
     opt = Flux.Adam(learning_rate)
     if clip_grad !== nothing
-        opt = Flux.Optimiser(ClipValue(clip_grad),opt)
+        opt = Flux.Optimiser(Flux.ClipValue(clip_grad),opt)
+        opt_state = Flux.setup(opt, model)
     end
-    params = Flux.params(model)
+    params = Flux.trainables(model)
 
     @info "number of parameters $(sum(length.(params)))"
-    return (model,params,opt)
+    return (model,params,opt_state)
 end
 
 
-function train_epoch!((model,params,optim),dl,learning_rate; clip_grad = nothing)
+function train_epoch!((model,params,opt_state),dl,learning_rate; clip_grad = nothing)
     loss_sum = 0
     N = 0
     for samples in dl
-        loss, back = Flux.pullback(params) do
+        loss, grads = Flux.withgradient(model) do m
             #model(samples...)
-            loss_function(model,samples...)
+            loss_function(m,samples...)
         end
 
-        grad = back(1f0)
-        Flux.update!(optim, params, grad)
+        Flux.update!(opt_state, model, grads[1])
 
         loss_sum += loss
         N += 1

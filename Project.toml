@@ -28,10 +28,10 @@ CUDAExt = "CUDA"
 AMDGPUExt = "AMDGPU"
 
 [compat]
-AMDGPU = "1"
+AMDGPU = "1.0"
 CUDA = "3.8, 4, 5"
 ChainRulesCore = "1"
-Flux = "0.14, 0.16"
+Flux = "0.15"
 NCDatasets = "0.11, 0.12, 0.13, 0.14"
 ThreadsX = "0.1"
 julia = "1"

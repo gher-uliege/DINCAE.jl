@@ -223,7 +223,7 @@ function loss_function(model::StepModel,xin,xtrue)
     return loss
 end
 
-Flux.@functor StepModel
+Flux.@layer StepModel
 
 function showsize(x)
     @show size(x)
