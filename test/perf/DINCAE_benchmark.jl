@@ -46,7 +46,7 @@ const F = Float32
 if CUDA.functional()
     Atype = CuArray{F}
 elseif AMDGPU.functional()
-    Atype = ROMArray{F}
+    Atype = ROCArray{F}
 else
     @warn "No supported GPU found. We will use the CPU which is very slow. Please check https://developer.nvidia.com/cuda-gpus"
     Atype = Array{F}
