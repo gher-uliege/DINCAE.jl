@@ -2,6 +2,8 @@
 [![codecov](https://codecov.io/github/gher-uliege/DINCAE.jl/graph/badge.svg?token=2FXNLLMNEF)](https://codecov.io/github/gher-uliege/DINCAE.jl)
 [![documentation stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gher-uliege.github.io/DINCAE.jl/stable/)
 [![documentation dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gher-uliege.github.io/DINCAE.jl/dev/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5575066.svg)](https://doi.org/10.5281/zenodo.5575066)
+
 
 # DINCAE.jl
 
