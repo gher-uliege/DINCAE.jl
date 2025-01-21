@@ -2,10 +2,8 @@
 [![codecov](https://codecov.io/github/gher-uliege/DINCAE.jl/graph/badge.svg?token=2FXNLLMNEF)](https://codecov.io/github/gher-uliege/DINCAE.jl)
 [![documentation stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gher-uliege.github.io/DINCAE.jl/stable/)
 [![documentation dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gher-uliege.github.io/DINCAE.jl/dev/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5575066.svg)](https://doi.org/10.5281/zenodo.5575066)
 
-[![Issues](https://img.shields.io/github/issues-raw/gher-uliege/DINCAE.jl?style=plastic)](https://github.com/gher-uliege/DINCAE.jl/issues)
-![Issues](https://img.shields.io/github/commit-activity/m/gher-uliege/DINCAE.jl)
-![Commit](https://img.shields.io/github/last-commit/gher-uliege/DINCAE.jl) ![GitHub top language](https://img.shields.io/github/languages/top/gher-uliege/DINCAE.jl)
 
 # DINCAE.jl
 
