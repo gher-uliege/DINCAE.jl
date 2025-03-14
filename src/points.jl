@@ -36,7 +36,7 @@ end
 function ChainRulesCore.rrule(::typeof(interpnd), pos::AbstractVector{<:NTuple{N}}, A) where N
     function interpnd_pullback(dy)
         dpos = ZeroTangent() # positions are always fixed
-        dA = interp_adjn(pos,dy,size(A))
+        dA = interp_adjn(pos,ChainRulesCore.unthunk(dy),size(A))
         return (NoTangent(),dpos,dA)
     end
     return interpnd(pos,A), interpnd_pullback
@@ -71,7 +71,7 @@ function interp_adjn!(pos::AbstractVector{<:NTuple{N}},values,A2) where N
 end
 
 function interp_adjn(pos::AbstractVector{<:NTuple{N}},values,sz::NTuple{N,Int}) where N
-    A2 = similar(pos,eltype(values),sz)
+    A2 = similar(values,sz)
     interp_adjn!(pos,values,A2)
     return A2
 end
