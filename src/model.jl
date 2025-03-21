@@ -397,7 +397,7 @@ at the epochs defined by `save_epochs`.
  * `learning_rate_decay_epoch`: the exponential decay rate of the learning rate. After `learning_rate_decay_epoch` the learning rate is halved. The learning rate is computed as  `learning_rate * 0.5^(epoch / learning_rate_decay_epoch)`. `learning_rate_decay_epoch` can be `Inf` for a constant learning rate (default)
  * `min_std_err`: minimum error standard deviation preventing a division close to zero (default `exp(-5) = 0.006737946999085467`)
  * `loss_weights_refine`: the weigh of the individual refinement layers using in the cost function. If `loss_weights_refine` has a single element, then there is no refinement.  (default `(1.,)`)
-
+ * `modeldir`: path of the directory to save the model checkpoints.
 
 !!! note
     Note that also the optional parameters should be to tuned for a particular
