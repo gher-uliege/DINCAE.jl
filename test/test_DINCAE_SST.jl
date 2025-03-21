@@ -128,12 +128,12 @@ xtrue = zeros(sz[1],sz[2],2)
 Atype = Array
 data_iter = DINCAE.DataBatches(Atype,data_source,batch_size)
 
-size(first(data_iter)[2])
+xin,xtrue = first(data_iter)
+@test size(xin)[3] == 10
+@test size(xtrue)[3] == 2
 
 # mirlo: 3.645 ms
 #@btime first($data_iter);
-
-
 
 fnames_rec = [tempname()]
 @test_throws Exception DINCAE.reconstruct(
@@ -141,4 +141,3 @@ fnames_rec = [tempname()]
         epochs = 2,
         save_epochs = [],
     )
-
