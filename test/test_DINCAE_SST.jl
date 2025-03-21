@@ -8,6 +8,9 @@ using Random
 using NCDatasets
 using AMDGPU
 using CUDA
+using Flux
+using Printf
+using JLD2
 
 const F = Float32
 Atype =
@@ -69,17 +72,17 @@ for (upsampling_method,is3D,truth_uncertain,loss_weights_refine) = (
 
     losses = DINCAE.reconstruct(
         Atype,data_all,fnames_rec;
-        epochs = epochs,
-        batch_size = batch_size,
-        truth_uncertain = truth_uncertain,
-        enc_nfilter_internal = enc_nfilter_internal,
-        clip_grad = clip_grad,
-        save_epochs = save_epochs,
-        is3D = is3D,
-        upsampling_method = upsampling_method,
-        ntime_win = ntime_win,
-        loss_weights_refine = loss_weights_refine,
-        paramfile = paramfile,
+        epochs,
+        batch_size,
+        truth_uncertain,
+        enc_nfilter_internal,
+        clip_grad,
+        save_epochs,
+        is3D,
+        upsampling_method,
+        ntime_win,
+        loss_weights_refine,
+        paramfile,
     )
 
     @test isfile(fnames_rec[1])
@@ -93,6 +96,33 @@ for (upsampling_method,is3D,truth_uncertain,loss_weights_refine) = (
 end
 
 
+# load model and replicate reconstruction
+
+(upsampling_method,is3D,truth_uncertain,loss_weights_refine) = (:nearest, false,false, (1.,))
+
+paramfile = tempname()
+modeldir = tempname()
+mkpath(modeldir)
+fnames_rec = [tempname()]
+
+epochs = 3
+save_epochs = [2,3]
+
+losses = DINCAE.reconstruct(
+    Atype,data_all,fnames_rec;
+    epochs,
+    batch_size,
+    truth_uncertain,
+    enc_nfilter_internal,
+    clip_grad,
+    save_epochs,
+    is3D,
+    upsampling_method,
+    ntime_win,
+    loss_weights_refine,
+    paramfile,
+    modeldir,
+)
 
 data = [
    (filename = filename,
@@ -103,34 +133,56 @@ data = [
    )
 ]
 
-ntime_win = 3
-cycle_periods = (365.25,) # days
-is3D = false
-remove_mean = true
+model_fname = joinpath(modeldir,"model-checkpoint-" * @sprintf("%05d",save_epochs[1]) * ".jld2")
+JLD2.@load(model_fname,train_mean_data,cycle_periods,remove_mean,is3D)
 
 data_source = DINCAE.NCData(
-    data,train = true,
-    ntime_win = ntime_win,
-    is3D = is3D,
-    cycle_periods = cycle_periods,
-    remove_mean = remove_mean,
+    data; train = false,
+    ntime_win,
+    is3D,
+    cycle_periods,
+    remove_mean,
+    mean_data = train_mean_data,
 )
 
-batch_size = 32
-sz = size(data_source.data_full)[1:2]
-
-xin = zeros(sz[1],sz[2],10)
-xtrue = zeros(sz[1],sz[2],2)
-
-# 312 µs
-#@btime DINCAE.getxy!(data_source,1,xin,xtrue);
-
+batch_size = 2
 Atype = Array
-data_iter = DINCAE.DataBatches(Atype,data_source,batch_size)
+data_iter = DINCAE.DataBatches(Atype,data_source,batch_size);
 
-xin,xtrue = first(data_iter)
-@test size(xin)[3] == 10
-@test size(xtrue)[3] == 2
+T = Float32
+sz = size(data_source.data_full);
+m_rec = zeros(T,sz[1],sz[2],sz[4]);
+sigma_rec = zeros(T,sz[1],sz[2],sz[4]);
+device = gpu
+
+for e in save_epochs
+    model_fname = joinpath(modeldir,"model-checkpoint-" * @sprintf("%05d",e) * ".jld2")
+    model = DINCAE.loadmodel(model_fname; device);
+    offset = 0
+
+    for (xin,xtrue) in data_iter
+        batch_m_rec, batch_sigma_rec = model(xin)
+
+        for n = 1:size(batch_m_rec,3)
+            m_rec[:,:,n+offset] += batch_m_rec[:,:,n]
+            sigma_rec[:,:,n+offset] += batch_sigma_rec[:,:,n]
+        end
+
+        offset += size(batch_m_rec,3)
+    end
+end
+
+m_rec /= length(save_epochs)
+sigma_rec /= length(save_epochs)
+
+ds = NCDataset(fnames_rec[1]);
+ncSST = nomissing(ds["SST"][:,:,:],NaN);
+ncSST_error = nomissing(ds["SST_error"][:,:,:],NaN);
+
+m = isfinite.(ncSST)
+
+@test m_rec[m] ≈ ncSST[m]
+@test sigma_rec[m] ≈ ncSST_error[m]
 
 # mirlo: 3.645 ms
 #@btime first($data_iter);

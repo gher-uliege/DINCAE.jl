@@ -365,6 +365,41 @@ function genmodel(sz,ninput,noutput;
 end
 
 
+function loadmodel(model_fname::AbstractString; device=cpu)
+    function apply_model(xin)
+        xrec = Array(model(device(xin)))
+
+        return (train_mean_data .+ xrec[:,:,1,:],
+                sqrt.(xrec[:,:,2,:]))
+    end
+
+    JLD2.@load(
+        model_fname,model_state,ntime_win,is3D,train_mean_data,
+        cycle_periods,remove_mean,direction_obs,e,noutput,enc_nfilter_internal,
+        upsampling_method,skipconnections,min_std_err,loss_weights_refine,
+        truth_uncertain,output_ndims,
+        regularization_L1_beta,regularization_L2_beta,
+        laplacian_penalty,laplacian_error_penalty,input_size)
+
+    sz = input_size
+    model = genmodel(sz[1:end-1],sz[end],noutput;
+                     enc_nfilter_internal,
+                     upsampling_method,
+                     skipconnections,
+                     min_std_err,
+                     loss_weights_refine,
+                     truth_uncertain,
+                     output_ndims,
+                     direction_obs,
+                     regularization_L1_beta, regularization_L2_beta,
+                     laplacian_penalty, laplacian_error_penalty)
+
+    Flux.loadmodel!(model,model_state)
+    model = model |> device
+    return apply_model
+    #return model
+end
+
 """
     reconstruct(Atype,data_all,fnames_rec;...)
 
@@ -568,9 +603,22 @@ function reconstruct(Atype,data_all,fnames_rec;
                 println("Save model $e")
                 model_fname = joinpath(modeldir,"model-checkpoint-" * @sprintf("%05d",e) * ".jld2")
                 model_state = Flux.state(cpu(model));
-                jldsave(model_fname; model_state, train_mean_data,
+                jldsave(model_fname; model_state,
                         ntime_win, is3D, cycle_periods, remove_mean,
-                        direction_obs, e)
+                        train_mean_data,
+                        direction_obs, e,
+                        noutput,
+                        enc_nfilter_internal,
+                        upsampling_method,
+                        skipconnections,
+                        min_std_err,
+                        loss_weights_refine,
+                        truth_uncertain,
+                        output_ndims,
+                        regularization_L1_beta, regularization_L2_beta,
+                        laplacian_penalty, laplacian_error_penalty,
+                        input_size = sz[1:end-1],
+                        )
             end
 
             println("Save output $e")
