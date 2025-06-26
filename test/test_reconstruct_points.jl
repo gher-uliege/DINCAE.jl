@@ -39,7 +39,6 @@ save_epochs = [epochs]
 savesnapshot = true
 nfilter_inc = 25
 batch_size = 32
-ndepth = 3
 ntime_win = 27
 learning_rate = 0.000579728
 probability_skip_for_training = 0.877079
