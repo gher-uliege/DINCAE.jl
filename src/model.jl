@@ -3,8 +3,6 @@ SumSkip(x) = SkipConnection(x,+)
 CatSkip(x) = SkipConnection(x,(mx,y) -> cat(mx, y, dims=Val(3)))
 
 
-#using JLD2
-
 # save inversion
 function sinv(x, ; minx = eltype(x)(1e-3))
     T = eltype(x)
