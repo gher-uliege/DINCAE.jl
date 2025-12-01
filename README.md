@@ -24,7 +24,7 @@ The method is described in the following articles:
 Panel (a) is the original data where we have added clouds (panel (b)). The reconstuction based on the data in panel (b) is shown in panel (c) together
 with its expected standard deviation error (panel (d))
 
-DINCAE is intended to be used with a [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) with [CUDA](https://en.wikipedia.org/wiki/CUDA) support (NVIDIA GPU). The code can also run on a [CPU](https://en.wikipedia.org/wiki/Central_processing_unit) but which will be quite slow.
+DINCAE is intended to be used with a [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) with [CUDA](https://en.wikipedia.org/wiki/CUDA) support (NVIDIA GPU) or with ROCm support (AMD GPU). The code can also run on a [CPU](https://en.wikipedia.org/wiki/Central_processing_unit) but which will be quite slow.
 
 ## Installation
 
@@ -46,31 +46,46 @@ Pkg.add(url="https://github.com/gher-uliege/DINCAE.jl", rev="main")
 Pkg.add(url="https://github.com/gher-uliege/DINCAE_utils.jl", rev="main")
 ```
 
-### CUDA support
+### CUDA/AMDGPU support
 
-To enable (optional) CUDA support on NVIDIA GPUs one need to install also the packages `CUDA` and `cuDNN`:
+To enable (optional) CUDA support for NVIDIA GPUs one need to install also the packages `CUDA` and `cuDNN`:
 
 ```julia
-using Pkg 
-Pkg.add("CUDA")
-Pkg.add("cuDNN")
+using Pkg
+Pkg.add(["CUDA","cuDNN"])
 ```
 
-With some adaptions to `DINCAE.jl`, one can probably also use AMD GPUs (with the package `AMDGPU`) and Apple Silicon (with the package `Metal`). PRs to implement support of these GPUs would be very welcome.
+To confirm that `CUDA` is functional, use the following command:
+
+```julia
+using CUDA
+CUDA.functional()
+```
+
+This command should return `true`.
+
+For AMD GPUs, install the package `AMDGPU`:
+
+```julia
+using Pkg
+Pkg.add("AMDGPU")
+```
+
+
+To confirm that the AMD GPU is functional, use:
+
+```julia
+using AMDGPU
+AMDGPU.functional()
+```
+
+With some adaptions to `DINCAE.jl`, one can probably use GPUs on macOS using the Metal programming framework. PRs to implement support of this GPU would be very welcome.
 
 After this, you should be able to load `DINCAE` with:
 
 ``` julia
 using DINCAE
 ```
-
-#### Checking CUDA installation
-
-To confirm that `CUDA` is functional to use the GPU (otherwise the CPU is used and the code will be much slower), the following command:
-```julia
-CUDA.functional()
-```
-should return `true`.
 
 ### Updating DINCAE
 
@@ -102,12 +117,12 @@ More information is available in the [documentation](https://gher-uliege.github.
 * Barth, A., Alvera-Azcárate, A., Licer, M., & Beckers, J.-M. (2020). DINCAE 1.0: a convolutional neural network with error estimates to reconstruct sea surface temperature satellite observations. Geoscientific Model Development, 13(3), 1609–1622. https://doi.org/10.5194/gmd-13-1609-2020
 * Barth, A., Alvera-Azcárate, A., Troupin, C., & Beckers, J.-M. (2022). DINCAE 2.0: multivariate convolutional neural network with error estimates to reconstruct sea surface temperature satellite and altimetry observations. Geoscientific Model Development, 15(5), 2183–2196. https://doi.org/10.5194/gmd-15-2183-2022
 
-### Applications 
+### Applications
 * Han, Z., He, Y., Liu, G., & Perrie, W. (2020). Application of DINCAE to Reconstruct the Gaps in Chlorophyll-a Satellite Observations in the South China Sea and West Philippine Sea. Remote Sensing, 12(3), 480. https://doi.org/10.3390/rs12030480
 * Ji, C., Zhang, Y., Cheng, Q., & Tsou, J. Y. (2021). Investigating ocean surface responses to typhoons using reconstructed satellite data. International Journal of Applied Earth Observation and Geoinformation, 103, 102474. https://doi.org/10.1016/j.jag.2021.102474
 * Jung, S., Yoo, C., & Im, J. (2022). High-Resolution Seamless Daily Sea Surface Temperature Based on Satellite Data Fusion and Machine Learning over Kuroshio Extension. Remote Sensing, 14(3), 575. https://doi.org/10.3390/rs14030575
 * Luo, X., Song, J., Guo, J., Fu, Y., Wang, L. & Cai, Y. (2022). Reconstruction of chlorophyll-a satellite data in Bohai and Yellow sea based on DINCAE method International. Journal of Remote Sensing, 43, 3336-3358. https://doi.org/10.1080/01431161.2022.2090872
-  
+
 Thank you for citing relevant previous work in DINCAE if you make a scientific publication.
 A bibtex entry can be generated from the DOI by using for example `curl -LH "Accept:  application/x-bibtex"  'https://doi.org/10.5194/gmd-15-2183-2022'`.
 
